@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # skala-vue
 
 This template should help get you started developing with Vue 3 in Vite.
@@ -42,3 +43,7 @@ npm run build
 ```sh
 npm run lint
 ```
+=======
+# skala_vue
+Vue 기반 프론트엔드 실습 프로젝트
+>>>>>>> 1a901b5bdd1723d74bf6cf8af6e29526c4c9add3

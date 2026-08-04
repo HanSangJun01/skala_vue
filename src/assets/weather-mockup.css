@@ -1,0 +1,166 @@
+/* 과제 1 — 날씨 Mockup 스타일 */
+
+.weather-app {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 24px 16px 40px;
+  font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+  color: #2d3436;
+}
+
+.app-title {
+  font-size: 26px;
+  font-weight: bold;
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+/* 섹션 배경 박스 (도시 검색 / 지역별 날씨 현황 공통) */
+.panel {
+  margin-bottom: 20px;
+  padding: 20px;
+  background-color: #f1f4f6;
+  border: 1px solid #dfe6e9;
+  border-radius: 12px;
+}
+
+.panel-title {
+  margin: 0 0 14px;
+  font-size: 17px;
+  font-weight: bold;
+  color: #2d3436;
+}
+
+/* 검색 영역 */
+.search-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 12px 14px;
+  font-size: 16px;
+  border: 1px solid #dfe6e9;
+  border-radius: 8px;
+  outline: none;
+}
+
+.search-input:focus {
+  border-color: #42b983;
+}
+
+.search-result {
+  margin-top: 8px;
+  font-size: 14px;
+  color: #636e72;
+}
+
+/* 카드 목록 */
+.card-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.weather-card {
+  position: relative;
+  flex: 1 1 200px;
+  padding: 20px;
+  background-color: #ffffff;
+  border: 1px solid #dfe6e9;
+  border-radius: 12px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+  cursor: pointer;
+}
+
+.weather-card:hover {
+  border-color: #42b983;
+}
+
+.city-name {
+  font-size: 20px;
+  font-weight: bold;
+  margin: 0 0 8px;
+}
+
+.city-temp {
+  font-size: 32px;
+  font-weight: bold;
+  margin: 0 0 4px;
+  color: #0984e3;
+}
+
+.city-status {
+  margin: 0 0 12px;
+  color: #636e72;
+}
+
+/* 25도 기준 라벨 */
+.temp-label {
+  display: inline-block;
+  margin: 0 0 14px;
+  padding: 4px 10px;
+  font-size: 13px;
+  border-radius: 999px;
+}
+
+.temp-label.hot {
+  background-color: #ffeaa7;
+  color: #d63031;
+}
+
+.temp-label.cool {
+  background-color: #dff9fb;
+  color: #0984e3;
+}
+
+/* 상세보기 버튼 */
+.detail-btn {
+  position: absolute;
+  top: 20px;
+  right: 16px;
+  display: block;
+  width: auto;
+  padding: 10px 15px;
+  font-size: 14px;
+  font-weight: bold;
+  color: #010101;
+  background-color: #d2d0d0;
+  border: 1px solid #020202;
+  cursor: pointer;
+}
+
+.detail-btn:hover {
+  background-color: #35a06f;
+}
+
+/* 검색 결과 없음 안내 */
+.empty-result {
+  margin: 0;
+  padding: 40px 20px;
+  text-align: center;
+  color: #636e72;
+  background-color: #ffffff;
+  border: 1px dashed #dfe6e9;
+  border-radius: 12px;
+}
+
+/* 상태바 — 카드 목록 아래 박스 */
+.status-bar {
+  margin-top: 20px;
+  min-height: 48px;
+  padding: 14px 16px;
+  box-sizing: border-box;
+  background-color: #cee3d3;
+  color: #006a1e;
+  font-size: 14px;
+  font-weight: bold;
+  text-align: center;
+  border-radius: 7px;
+}
+
+/* 아직 선택된 도시가 없을 때의 안내 문구 */
+.status-hint {
+  font-weight: normal;
+  opacity: 0.75;
+}

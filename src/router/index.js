@@ -1,21 +1,33 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import HomeView from '../views/HomeView.vue'
 
 const router = createRouter({
+  // 슬래시(/)를 사용해 URL 을 관리하는 방식
   history: createWebHistory(import.meta.env.BASE_URL),
+
   routes: [
     {
       path: '/',
-      name: 'home',
-      component: HomeView,
+      name: 'WeatherHome',
+      // 동적 import — 이 컴포넌트가 필요한 순간에 따로 내려받는다 (Lazy Loading)
+      component: () => import('@/views/WeatherHomeView.vue'),
     },
     {
       path: '/about',
-      name: 'about',
-      // route level code-splitting
-      // this generates a separate chunk (About.[hash].js) for this route
-      // which is lazy-loaded when the route is visited.
-      component: () => import('../views/AboutView.vue'),
+      name: 'WeatherAbout',
+      component: () => import('@/views/WeatherAboutView.vue'),
+    },
+    {
+      // :cityId 는 동적 세그먼트. /weather/city_01 로 들어오면 route.params.cityId === 'city_01'
+      path: '/weather/:cityId',
+      name: 'WeatherDetail',
+      component: () => import('@/views/WeatherDetailView.vue'),
+    },
+    {
+      // Catch-all Route — 위에서 걸리지 않은 모든 주소를 받는다.
+      // 반드시 배열의 가장 마지막에 둘 것. 위에 있으면 모든 경로를 삼켜버린다.
+      path: '/:pathMatch(.*)*',
+      name: 'NotFound',
+      component: () => import('@/views/NotFoundView.vue'),
     },
   ],
 })

@@ -1,10 +1,14 @@
 <script setup>
 import { ref, computed, watch, watchEffect } from 'vue'
-import BaseDashboardCard from './BaseDashboardCard.vue'
-import SearchBar from './SearchBar.vue'
-import WeatherCard from './WeatherCard.vue'
+import { useRouter } from 'vue-router'
+import BaseDashboardCard from '@/components/exercise/BaseDashboardCard.vue'
+import SearchBar from '@/components/exercise/SearchBar.vue'
+import WeatherCard from '@/components/exercise/WeatherCard.vue'
 
-// 요구사항 1 — 모든 반응형 데이터는 부모가 전부 보유한다
+// 코드로 페이지를 이동하기 위한 라우터 인스턴스 (Programmatic Navigation)
+const router = useRouter()
+
+// 모든 반응형 데이터는 이 View 가 전부 보유한다
 // 지역별 날씨 데이터 배열 (Mock Data)
 const weatherList = ref([
   { id: 'city_01', name: '서울', temp: 28, status: '맑음' },
@@ -46,16 +50,14 @@ const handleSelectCard = (city) => {
   selectedCityInfo.value = `${city.name}이 선택되었습니다.`
 }
 
-// 자식이 올려보낸 click-detail 을 받아 alert 를 띄운다
+// 요구사항 3 — window.alert 를 제거하고 상세 페이지로 이동시킨다
 const handleClickDetail = (city) => {
-  window.alert(`${city.name}의 현재 날씨는 [${city.status}] 상태입니다.`)
+  router.push('/weather/' + city.id)
 }
 </script>
 
 <template>
   <div class="weather-app">
-    <h1 class="app-title">🌤 과제 3: 날씨(컴포넌트)</h1>
-
     <!-- 검색박스 : BaseDashboardCard 의 slot 에 SearchBar 주입 -->
     <BaseDashboardCard title="도시 검색">
       <SearchBar
@@ -96,13 +98,6 @@ const handleClickDetail = (city) => {
   padding: 20px 14px 32px;
   font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
   color: #2d3436;
-}
-
-.app-title {
-  font-size: 22px;
-  font-weight: bold;
-  text-align: center;
-  margin-bottom: 18px;
 }
 
 /* 카드 목록 */

@@ -15,8 +15,8 @@ const emit = defineEmits(['select-card', 'click-detail'])
     <p class="city-status">{{ cityItem.status }}</p>
 
     <!-- 25도 기준 라벨 분기 -->
-    <p v-if="cityItem.temp >= 25" class="temp-label hot">🔥 더움</p>
-    <p v-else class="temp-label cool">❄️ 선선함</p>
+    <p v-if="cityItem.temp >= 25" class="temp-label hot">🔥 더움 (25도 이상)</p>
+    <p v-else class="temp-label cool">❄️ 선선함 (25도 미만)</p>
 
     <!-- .stop 으로 위쪽 li 의 @click 까지 번지지 않게 한다 -->
     <button class="detail-btn" @click.stop="emit('click-detail', cityItem)">상세보기</button>

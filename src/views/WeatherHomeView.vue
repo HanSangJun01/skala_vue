@@ -1,20 +1,33 @@
 <script setup>
-import { ref, computed, watch, watchEffect } from 'vue'
+import { ref, computed, watch, watchEffect, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import axios from 'axios'
 import BaseDashboardCard from '@/components/exercise/BaseDashboardCard.vue'
 import SearchBar from '@/components/exercise/SearchBar.vue'
 import WeatherCard from '@/components/exercise/WeatherCard.vue'
+
+// 발급받은 OpenWeatherMap API 키를 여기에 넣는다.
+// 환경 변수(.env)로 빼는 것은 과제 9 의 요구사항이다.
+const API_KEY = import.meta.env.VITE_WEATHER_API_KEY
+const BASE_URL = 'https://api.openweathermap.org/data/2.5/weather'
+
+// 조회할 도시 목록. id 는 :key 와 상세 페이지 라우팅에 계속 필요하다.
+const targetCities = [
+  { id: 'city_01', name: '서울', english: 'Seoul' },
+  { id: 'city_02', name: '수원', english: 'Suwon' },
+  { id: 'city_03', name: '부산', english: 'Busan' },
+]
 
 // 코드로 페이지를 이동하기 위한 라우터 인스턴스 (Programmatic Navigation)
 const router = useRouter()
 
 // 모든 반응형 데이터는 이 View 가 전부 보유한다
-// 지역별 날씨 데이터 배열 (Mock Data)
-const weatherList = ref([
-  { id: 'city_01', name: '서울', temp: 28, status: '맑음' },
-  { id: 'city_02', name: '수원', temp: 24, status: '비' },
-  { id: 'city_03', name: '부산', temp: 26, status: '구름' },
-])
+// 실데이터로 채워질 배열. 처음에는 비어 있다.
+const weatherList = ref([])
+
+// 통신 상태
+const isLoading = ref(false)
+const errorMessage = ref('')
 
 // 검색어 (한글 조합 중인 글자까지 그대로 담긴다)
 const searchQuery = ref('')
@@ -29,6 +42,41 @@ const filteredWeatherList = computed(() => {
   }
   return weatherList.value.filter((city) => city.name.includes(searchQuery.value))
 })
+
+// 도시 3곳의 현재 날씨를 순서대로 받아온다
+const fetchWeather = async () => {
+  isLoading.value = true
+  errorMessage.value = ''
+  const results = []
+
+  try {
+    for (const city of targetCities) {
+      // units=metric 이면 섭씨로, lang=kr 이면 날씨 설명이 한글로 온다
+      const url = `${BASE_URL}?q=${city.english}&appid=${API_KEY}&units=metric&lang=kr`
+      const response = await axios.get(url)
+
+      // Axios 는 response.data 가 이미 JSON 으로 파싱되어 있다
+      results.push({
+        id: city.id,
+        name: city.name,
+        temp: Math.round(response.data.main.temp),
+        status: response.data.weather[0].description,
+        humidity: response.data.main.humidity,
+      })
+    }
+    weatherList.value = results
+  } catch (error) {
+    console.error('통신 중 에러가 발생했습니다:', error)
+    errorMessage.value =
+      '날씨 데이터를 가져오지 못했습니다. API 키 활성화 여부와 주소를 확인해 주세요.'
+  } finally {
+    // 성공이든 실패든 로딩 표시는 반드시 해제한다
+    isLoading.value = false
+  }
+}
+
+// 부착(Mounting) 시점이 초기 데이터를 받아오기에 알맞은 타이밍이다
+onMounted(fetchWeather)
 
 // 이전 값(oldValue)이 필요하고 감시 대상이 하나로 명확하므로 watch 를 쓴다
 watch(selectedCityInfo, (newValue, oldValue) => {
@@ -50,7 +98,7 @@ const handleSelectCard = (city) => {
   selectedCityInfo.value = `${city.name}이 선택되었습니다.`
 }
 
-// 요구사항 3 — window.alert 를 제거하고 상세 페이지로 이동시킨다
+// window.alert 를 제거하고 상세 페이지로 이동시킨다
 const handleClickDetail = (city) => {
   router.push('/weather/' + city.id)
 }
@@ -69,8 +117,14 @@ const handleClickDetail = (city) => {
 
     <!-- 리스트박스 : 같은 BaseDashboardCard 를 재사용 -->
     <BaseDashboardCard title="지역별 날씨 현황">
+      <!-- 통신 중 -->
+      <p v-if="isLoading" class="loading-text">⏳ 실시간 날씨를 불러오는 중입니다...</p>
+
+      <!-- 통신 실패 -->
+      <p v-else-if="errorMessage !== ''" class="error-text">{{ errorMessage }}</p>
+
       <!-- slot 안이지만 부모 스코프에서 평가되므로 filteredWeatherList 에 접근할 수 있다 -->
-      <ul v-if="filteredWeatherList.length > 0" class="card-list">
+      <ul v-else-if="filteredWeatherList.length > 0" class="card-list">
         <WeatherCard
           v-for="city in filteredWeatherList"
           :key="city.id"
@@ -108,6 +162,30 @@ const handleClickDetail = (city) => {
   display: flex;
   flex-direction: column;
   gap: 12px;
+}
+
+/* 통신 중 안내 */
+.loading-text {
+  margin: 0;
+  padding: 28px 16px;
+  text-align: center;
+  font-size: 14px;
+  color: #636e72;
+  background-color: #ffffff;
+  border: 1px solid #dfe6e9;
+  border-radius: 10px;
+}
+
+/* 통신 실패 안내 */
+.error-text {
+  margin: 0;
+  padding: 28px 16px;
+  text-align: center;
+  font-size: 14px;
+  color: #d63031;
+  background-color: #ffffff;
+  border: 1px solid #ffb8b8;
+  border-radius: 10px;
 }
 
 /* 검색 결과 없음 안내 */

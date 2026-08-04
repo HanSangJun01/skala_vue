@@ -1,27 +1,79 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import axios from 'axios'
 import { useConfigStore } from '@/stores/configStore'
+
+// 발급받은 OpenWeatherMap API 키를 여기에 넣는다.
+// 환경 변수(.env)로 빼는 것은 과제 9 의 요구사항이다.
+const API_KEY = import.meta.env.VITE_WEATHER_API_KEY
+const BASE_URL = 'https://api.openweathermap.org/data/2.5/weather'
+
+// 주소의 cityId 를 영문 도시명으로 바꾸기 위한 목록
+const targetCities = [
+  { id: 'city_01', name: '서울', english: 'Seoul' },
+  { id: 'city_02', name: '수원', english: 'Suwon' },
+  { id: 'city_03', name: '부산', english: 'Busan' },
+]
 
 const route = useRoute()
 const router = useRouter()
 const configStore = useConfigStore()
 
-// 도시 코드별 상세 기상관측 Mock Data
-const detailMockData = {
-  city_01: { id: 'city_01', name: '서울', temp: 28, status: '맑음', humidity: 55, wind: 2.1, pressure: 1012 },
-  city_02: { id: 'city_02', name: '수원', temp: 24, status: '비', humidity: 82, wind: 3.4, pressure: 1008 },
-  city_03: { id: 'city_03', name: '부산', temp: 26, status: '구름', humidity: 68, wind: 4.0, pressure: 1010 },
-}
-
 const cityDetail = ref(null)
 
-// 요구사항 4 — Mount 시점에 주소의 :cityId 로 Mock Data 에서 도시 객체를 고른다
-onMounted(() => {
+// 통신 상태
+const isLoading = ref(false)
+const errorMessage = ref('')
+
+// 주소의 :cityId 에 해당하는 도시의 현재 날씨를 받아온다
+const fetchDetail = async () => {
   const cityId = route.params.cityId
-  cityDetail.value = detailMockData[cityId] || null
   console.log(`🔎 상세 페이지 진입: ${cityId}`)
-})
+
+  // 목록에서 해당 도시를 찾는다
+  let target = null
+  for (const city of targetCities) {
+    if (city.id === cityId) {
+      target = city
+    }
+  }
+
+  // 등록되지 않은 도시 코드면 통신하지 않고 끝낸다
+  if (target === null) {
+    return
+  }
+
+  isLoading.value = true
+  errorMessage.value = ''
+
+  try {
+    // units=metric 이면 섭씨로, lang=kr 이면 날씨 설명이 한글로 온다
+    const url = `${BASE_URL}?q=${target.english}&appid=${API_KEY}&units=metric&lang=kr`
+    const response = await axios.get(url)
+
+    // Axios 는 response.data 가 이미 JSON 으로 파싱되어 있다
+    cityDetail.value = {
+      id: target.id,
+      name: target.name,
+      temp: Math.round(response.data.main.temp),
+      status: response.data.weather[0].description,
+      humidity: response.data.main.humidity,
+      wind: response.data.wind.speed,
+      pressure: response.data.main.pressure,
+    }
+  } catch (error) {
+    console.error('통신 중 에러가 발생했습니다:', error)
+    errorMessage.value =
+      '날씨 데이터를 가져오지 못했습니다. API 키 활성화 여부와 주소를 확인해 주세요.'
+  } finally {
+    // 성공이든 실패든 로딩 표시는 반드시 해제한다
+    isLoading.value = false
+  }
+}
+
+// 부착(Mounting) 시점이 초기 데이터를 받아오기에 알맞은 타이밍이다
+onMounted(fetchDetail)
 
 // 화면에 보여줄 기온. 원본 데이터는 항상 섭씨 숫자다.
 // WeatherCard 와 거의 같은 코드가 중복되는데, 이 과제에서는 그대로 둔다.
@@ -44,7 +96,13 @@ const goHome = () => {
 
 <template>
   <div class="detail-view">
-    <div v-if="cityDetail !== null">
+    <!-- 통신 중 -->
+    <p v-if="isLoading" class="loading-text">⏳ 실시간 날씨를 불러오는 중입니다...</p>
+
+    <!-- 통신 실패 -->
+    <p v-else-if="errorMessage !== ''" class="error-text">{{ errorMessage }}</p>
+
+    <div v-else-if="cityDetail !== null">
       <h1 class="detail-title">{{ cityDetail.name }} 상세 기상관측</h1>
 
       <!-- 25도 기준 라벨.
@@ -146,6 +204,30 @@ const goHome = () => {
   margin: 0;
   font-size: 14px;
   font-weight: bold;
+}
+
+/* 통신 중 안내 */
+.loading-text {
+  margin: 0 0 20px;
+  padding: 28px 16px;
+  text-align: center;
+  font-size: 14px;
+  color: #636e72;
+  background-color: #ffffff;
+  border: 1px solid #dfe6e9;
+  border-radius: 10px;
+}
+
+/* 통신 실패 안내 */
+.error-text {
+  margin: 0 0 20px;
+  padding: 28px 16px;
+  text-align: center;
+  font-size: 14px;
+  color: #d63031;
+  background-color: #ffffff;
+  border: 1px solid #ffb8b8;
+  border-radius: 10px;
 }
 
 .detail-empty {

@@ -40,3 +40,8 @@ __screenshots__/
 
 # oh-my-claudecode
 .omc/
+
+# 환경 변수 (API 키 등) — .env.example 만 커밋한다
+.env
+.env.*
+!.env.example

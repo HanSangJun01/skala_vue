@@ -1,9 +1,11 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useConfigStore } from '@/stores/configStore'
 
 const route = useRoute()
 const router = useRouter()
+const configStore = useConfigStore()
 
 // 도시 코드별 상세 기상관측 Mock Data
 const detailMockData = {
@@ -21,6 +23,20 @@ onMounted(() => {
   console.log(`🔎 상세 페이지 진입: ${cityId}`)
 })
 
+// 화면에 보여줄 기온. 원본 데이터는 항상 섭씨 숫자다.
+// WeatherCard 와 거의 같은 코드가 중복되는데, 이 과제에서는 그대로 둔다.
+const displayTemp = computed(() => {
+  // cityDetail 은 onMounted 이후에 채워진다
+  if (cityDetail.value === null) {
+    return null
+  }
+  const rawTemp = cityDetail.value.temp
+  if (configStore.unit === 'fahrenheit') {
+    return Math.round((rawTemp * 9) / 5 + 32)
+  }
+  return rawTemp
+})
+
 const goHome = () => {
   router.push('/')
 }
@@ -31,14 +47,15 @@ const goHome = () => {
     <div v-if="cityDetail !== null">
       <h1 class="detail-title">{{ cityDetail.name }} 상세 기상관측</h1>
 
-      <!-- 25도 기준 라벨 -->
+      <!-- 25도 기준 라벨.
+           판정은 화씨 변환값이 아니라 원본 섭씨(cityDetail.temp)로 해야 한다. -->
       <p v-if="cityDetail.temp >= 25" class="temp-label hot">🔥 더움 (25도 이상)</p>
       <p v-else class="temp-label cool">❄️ 선선함 (25도 미만)</p>
 
       <dl class="detail-list">
         <div class="detail-row">
           <dt>기온</dt>
-          <dd>{{ cityDetail.temp }}℃</dd>
+          <dd>{{ displayTemp }}{{ configStore.unitSymbol }}</dd>
         </div>
         <div class="detail-row">
           <dt>날씨</dt>

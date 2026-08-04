@@ -1,20 +1,36 @@
 <script setup>
-// 요구사항 4 — 도시 객체 하나를 전달받아 표시하고(props),
+import { computed } from 'vue'
+import { useConfigStore } from '@/stores/configStore'
+
+// 도시 객체 하나를 전달받아 표시하고(props),
 // 카드 선택(select-card)과 상세보기(click-detail)를 부모에게 올려보낸다(emits)
-defineProps({
+const props = defineProps({
   cityItem: { type: Object, required: true },
 })
 
 const emit = defineEmits(['select-card', 'click-detail'])
+
+const configStore = useConfigStore()
+
+// 화면에 보여줄 기온. 원본 데이터는 항상 섭씨 숫자다.
+const displayTemp = computed(() => {
+  const rawTemp = props.cityItem.temp
+  if (configStore.unit === 'fahrenheit') {
+    return Math.round((rawTemp * 9) / 5 + 32)
+  }
+  return rawTemp
+})
 </script>
 
 <template>
   <li class="weather-card" @click="emit('select-card', cityItem)">
     <h3 class="city-name">{{ cityItem.name }}</h3>
-    <p class="city-temp">{{ cityItem.temp }}℃</p>
+    <p class="city-temp">{{ displayTemp }}{{ configStore.unitSymbol }}</p>
     <p class="city-status">{{ cityItem.status }}</p>
 
-    <!-- 25도 기준 라벨 분기 -->
+    <!-- 25도 기준 라벨 분기.
+         판정은 화씨 변환값이 아니라 원본 섭씨(cityItem.temp)로 해야 한다. -->
+
     <p v-if="cityItem.temp >= 25" class="temp-label hot">🔥 더움 (25도 이상)</p>
     <p v-else class="temp-label cool">❄️ 선선함 (25도 미만)</p>
 

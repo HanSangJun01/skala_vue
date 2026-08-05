@@ -56,30 +56,39 @@ const filteredWeatherList = computed(() => {
   return weatherList.value.filter((city) => city.name.includes(searchQuery.value))
 })
 
-// 도시 3곳의 현재 날씨를 순서대로 받아온다
+// 도시 전체의 현재 날씨를 한꺼번에 받아온다.
+//
+// 전에는 for 문 안에서 await 했다. 그러면 한 요청이 끝나야 다음 요청이 '출발'해서
+// 왕복 시간이 도시 수만큼 쌓인다. 도시가 늘수록 대기 시간이 그대로 늘어난다.
+// 아래처럼 요청을 먼저 전부 만들어 두면 통신이 동시에 출발하고, 기다리는 건 한 번뿐이다.
 const fetchWeather = async () => {
   isLoading.value = true
   errorMessage.value = ''
-  const results = []
 
   try {
-    for (const city of targetCities) {
-      // units=metric 이면 섭씨로, lang=kr 이면 날씨 설명이 한글로 온다
+    // map 이 실행되는 순간 axios.get 이 호출되므로 이 줄에서 이미 통신이 시작된다.
+    // units=metric 이면 섭씨로, lang=kr 이면 날씨 설명이 한글로 온다
+    const requests = targetCities.map((city) => {
       const url = `${BASE_URL}?q=${city.query}&appid=${API_KEY}&units=metric&lang=kr`
-      const response = await axios.get(url)
+      return axios.get(url)
+    })
 
-      // Axios 는 response.data 가 이미 JSON 으로 파싱되어 있다
-      results.push({
-        id: city.id,
-        name: city.name,
-        temp: Math.round(response.data.main.temp),
-        status: response.data.weather[0].description,
-        // 아이콘 코드('01d', '04n' 같은 값). 그림을 고르는 데 쓴다.
-        icon: response.data.weather[0].icon,
-        humidity: response.data.main.humidity,
-      })
-    }
-    weatherList.value = results
+    // axios.all 은 Promise.all 을 그대로 감싼 함수다. 전부 끝날 때까지 여기서 한 번만 기다린다.
+    // 하나라도 실패하면 통째로 catch 로 넘어간다.
+    const responses = await axios.all(requests)
+
+    // 응답은 요청을 넣은 순서 그대로 돌아온다.
+    // 그래서 같은 순번(index)으로 targetCities 의 도시와 짝지을 수 있다.
+    // Axios 는 response.data 가 이미 JSON 으로 파싱되어 있다
+    weatherList.value = responses.map((response, index) => ({
+      id: targetCities[index].id,
+      name: targetCities[index].name,
+      temp: Math.round(response.data.main.temp),
+      status: response.data.weather[0].description,
+      // 아이콘 코드('01d', '04n' 같은 값). 그림을 고르는 데 쓴다.
+      icon: response.data.weather[0].icon,
+      humidity: response.data.main.humidity,
+    }))
   } catch (error) {
     console.error('통신 중 에러가 발생했습니다:', error)
     errorMessage.value =

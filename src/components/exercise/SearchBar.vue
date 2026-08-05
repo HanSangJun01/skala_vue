@@ -16,91 +16,94 @@ const onInput = (event) => {
 </script>
 
 <template>
+  <!-- 예전에는 세로로 쌓인 블록이라 패널 하나를 통째로 차지했다.
+       지금은 정렬 드롭다운과 같은 줄에 놓이는 한 줄짜리 컨트롤이다. -->
   <div class="search-bar">
-    <!-- 돋보기는 장식이므로 입력창을 감싸고 CSS 로 위치만 잡는다 -->
+    <!-- 돋보기는 장식이므로 입력창을 감싸고 CSS 로 위치만 잡는다.
+         이모지는 기기마다 모양이 달라 WeatherIcon 처럼 SVG 로 그린다. -->
     <div class="search-field">
-      <span class="search-icon" aria-hidden="true">🔍</span>
+      <svg class="search-icon" viewBox="0 0 24 24" aria-hidden="true">
+        <circle cx="11" cy="11" r="7" />
+        <path d="m20 20-3.5-3.5" />
+      </svg>
       <input
         type="text"
         class="search-input"
         :value="query"
         @input="onInput"
-        placeholder="검색할 도시 이름을 입력하세요"
+        placeholder="도시 이름 검색"
+        aria-label="도시 이름 검색"
       />
-    </div>
 
-    <p class="search-result">
-      검색 중인 도시 : <strong>{{ query }}</strong>
-      <span class="search-count">검색 결과 {{ resultCount }}건</span>
-    </p>
+      <!-- 검색 전에는 아무것도 거르지 않았으므로 '10건'은 사실이 아니다.
+           입력이 있을 때만 결과 수를 보여준다. -->
+      <span v-if="query !== ''" class="search-count">{{ resultCount }}건</span>
+    </div>
   </div>
 </template>
 
 <style scoped>
+/* 아이콘·입력·건수를 한 줄에 세운다. 껍데기가 곧 입력창이라
+   :focus-within 으로 안쪽 input 이 초점을 받을 때 테두리를 칠한다. */
 .search-field {
-  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 34px;
+  padding: 0 14px;
+  background-color: var(--dash-surface);
+  border: 1px solid var(--dash-line);
+  border-radius: var(--dash-r-pill);
+  transition:
+    border-color var(--dash-ease),
+    box-shadow var(--dash-ease);
+}
+
+.search-field:focus-within {
+  border-color: var(--dash-accent);
+  box-shadow: 0 0 0 3px var(--dash-accent-soft);
 }
 
 .search-icon {
-  position: absolute;
-  top: 50%;
-  left: 15px;
-  transform: translateY(-50%);
-  font-size: 13px;
-  opacity: 0.45;
-  pointer-events: none; /* 아이콘을 클릭해도 입력창이 눌리도록 */
+  flex-shrink: 0;
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: var(--dash-ink-weak);
+  stroke-width: 2;
+  stroke-linecap: round;
 }
 
 .search-input {
-  width: 100%;
-  box-sizing: border-box;
-  padding: 13px 16px 13px 38px; /* 왼쪽은 아이콘 자리만큼 비운다 */
+  flex: 1;
+  min-width: 0;
+  padding: 0;
   font-family: inherit;
-  font-size: 14px;
+  font-size: 13px;
   color: var(--dash-ink);
-  background-color: var(--dash-sunken);
-  border: 1px solid var(--dash-line);
-  border-radius: var(--dash-r-pill);
+  background-color: transparent;
+  border: 0;
   outline: none;
-  transition:
-    border-color var(--dash-ease),
-    background-color var(--dash-ease),
-    box-shadow var(--dash-ease);
 }
 
 .search-input::placeholder {
   color: var(--dash-ink-weak);
 }
 
-.search-input:focus {
-  background-color: var(--dash-surface);
-  border-color: var(--dash-accent);
-  box-shadow:
-    0 0 0 4px var(--dash-accent-soft),
-    var(--dash-shadow-sm);
+/* 껍데기가 이미 초점 테두리를 그리므로 input 자체의 기본 링은 끈다 */
+.search-input:focus-visible {
+  outline: none;
 }
 
-.search-result {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin: 10px 0 0;
-  font-size: 12px;
-  color: var(--dash-ink-mid);
-}
-
-.search-result strong {
-  font-weight: 700;
-  color: var(--dash-ink);
-}
-
-/* 결과 건수는 알약 모양으로 떼어내 눈에 먼저 들어오게 한다 */
+/* 결과 건수 */
 .search-count {
-  margin-left: auto;
-  padding: 3px 9px;
+  flex-shrink: 0;
+  padding: 2px 8px;
+  font-size: 11px;
   font-weight: 700;
   color: var(--dash-accent-deep);
   background-color: var(--dash-accent-soft);
   border-radius: var(--dash-r-pill);
+  font-variant-numeric: tabular-nums;
 }
 </style>

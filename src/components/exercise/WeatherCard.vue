@@ -3,6 +3,7 @@ import { computed } from 'vue'
 import { useConfigStore } from '@/stores/configStore'
 import { getTempTier, getTempPercent, SCALE_MIN, SCALE_MAX } from '@/utils/temperature'
 import WeatherIcon from '@/components/exercise/WeatherIcon.vue'
+import AirQualityChip from '@/components/exercise/AirQualityChip.vue'
 
 // 도시 객체 하나를 전달받아 표시하고(props),
 // 카드 선택(select-card)과 상세보기(click-detail)를 부모에게 올려보낸다(emits)
@@ -17,17 +18,34 @@ const configStore = useConfigStore()
 // 기온 단계. 원본 섭씨를 넘겨야 한다 (화씨를 넣으면 판정이 틀어진다)
 const tempTier = computed(() => getTempTier(props.cityItem.temp))
 
-// 눈금 막대 채움 비율. 단위를 바꿔도 길이는 그대로여야 하므로 섭씨 기준.
+// 눈금 위 위치. 단위를 바꿔도 자리는 그대로여야 하므로 섭씨 기준.
+// 카드마다 채움 비율을 따로 그리던 예전 방식은 서울 96% / 남극 10% 가
+// 서로 아무 관계가 없어서, 옆 카드와 비교가 되지 않았다.
+// 이제 −20~40℃ 자 하나를 모든 카드가 공유하므로 점 위치가 곧 기온이다.
 const tempPercent = computed(() => getTempPercent(props.cityItem.temp))
 
-// 화면에 보여줄 기온. 원본 데이터는 항상 섭씨 숫자다.
-const displayTemp = computed(() => {
-  const rawTemp = props.cityItem.temp
-  if (configStore.unit === 'fahrenheit') {
-    return Math.round((rawTemp * 9) / 5 + 32)
-  }
-  return rawTemp
+// 최저~최고가 눈금에서 차지하는 구간
+const rangePercent = computed(() => {
+  const min = getTempPercent(props.cityItem.tempMin)
+  const max = getTempPercent(props.cityItem.tempMax)
+  return { left: min, width: Math.max(0, max - min) }
 })
+
+// 0℃ 가 눈금의 어디인지 — 영하와 영상을 가르는 기준선
+const zeroPercent = getTempPercent(0)
+
+// 섭씨 숫자를 현재 단위로 바꾼다. 원본 데이터는 항상 섭씨다.
+const toDisplayUnit = (celsius) =>
+  configStore.unit === 'fahrenheit' ? Math.round((celsius * 9) / 5 + 32) : celsius
+
+const displayTemp = computed(() => toDisplayUnit(props.cityItem.temp))
+
+// 그날의 최저·최고. 예보를 볼 때 대표기온 다음으로 바로 찾는 값이라
+// 상세까지 들어가지 않아도 목록에서 보이게 한다.
+const displayRange = computed(() => ({
+  min: toDisplayUnit(props.cityItem.tempMin),
+  max: toDisplayUnit(props.cityItem.tempMax),
+}))
 </script>
 
 <template>
@@ -44,22 +62,32 @@ const displayTemp = computed(() => {
         </p>
       </div>
 
-      <p class="city-temp">
-        {{ displayTemp }}<span class="temp-unit">{{ configStore.unitSymbol }}</span>
-      </p>
+      <div class="card-temp">
+        <p class="city-temp">
+          {{ displayTemp }}<span class="temp-unit">{{ configStore.unitSymbol }}</span>
+        </p>
+
+        <!-- 그날의 최저·최고 -->
+        <p class="city-range">{{ displayRange.min }}° / {{ displayRange.max }}°</p>
+      </div>
     </div>
 
-    <!-- 기온 눈금 — -20~40℃ 중 어디쯤인지 막대로 보여준다.
-         show-text 를 끄지 않으면 오른쪽에 "63%" 가 따라붙는다.
-         색은 CSS 에서 --t-solid 를 읽으므로 color 속성을 쓰지 않는다. -->
-    <el-progress
+    <!-- 기온 눈금 — 모든 카드가 같은 −20~40℃ 자를 쓴다.
+         띠는 그날의 최저~최고, 점은 대표기온.
+         색은 CSS 에서 --t-solid 를 읽으므로 여기서 색을 적지 않는다. -->
+    <div
       class="temp-scale"
-      :percentage="tempPercent"
-      :stroke-width="5"
-      :show-text="false"
       :title="`${SCALE_MIN}℃ ~ ${SCALE_MAX}℃ 중 ${cityItem.temp}℃`"
       aria-hidden="true"
-    />
+    >
+      <span class="scale-track"></span>
+      <span class="scale-zero" :style="{ left: zeroPercent + '%' }"></span>
+      <span
+        class="scale-span"
+        :style="{ left: rangePercent.left + '%', width: rangePercent.width + '%' }"
+      ></span>
+      <span class="scale-dot" :style="{ left: tempPercent + '%' }"></span>
+    </div>
 
     <div class="card-foot">
       <!-- 단계 라벨 -->
@@ -67,6 +95,10 @@ const displayTemp = computed(() => {
 
       <!-- 습도 -->
       <p class="humidity-chip">습도 {{ cityItem.humidity }}%</p>
+
+      <!-- 대기질 — 기온과 다른 축이라 알약 형태로 떼어 놓는다.
+           예보 범위 밖(마지막 날)이면 aqi 가 null 이라 알아서 빠진다. -->
+      <AirQualityChip :aqi="cityItem.aqi ?? null" />
 
       <!-- .stop 으로 위쪽 li 의 @click 까지 번지지 않게 한다 -->
       <el-button class="detail-btn" size="small" round @click.stop="emit('click-detail', cityItem)">
@@ -80,7 +112,7 @@ const displayTemp = computed(() => {
 .weather-card {
   display: flex;
   flex-direction: column;
-  padding: 20px 20px 16px;
+  padding: 14px 16px 12px;
   background-color: var(--dash-surface);
   border: 1px solid var(--dash-line);
   border-radius: var(--dash-r-lg);
@@ -111,7 +143,7 @@ const displayTemp = computed(() => {
 
 .city-name {
   margin: 0;
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 700;
   letter-spacing: -0.02em;
   color: var(--dash-ink);
@@ -127,12 +159,17 @@ const displayTemp = computed(() => {
   color: var(--dash-ink-mid);
 }
 
+/* 기온과 최저·최고를 오른쪽 끝에 세로로 붙인다 */
+.card-temp {
+  text-align: right;
+}
+
 /* 기온 — 가장 먼저 읽혀야 하므로 크고 단계색으로 */
 .city-temp {
   margin: 0;
-  font-size: 40px;
-  font-weight: 800;
-  line-height: 0.9;
+  font-size: 30px;
+  font-weight: 700;
+  line-height: 0.95;
   letter-spacing: -0.04em;
   white-space: nowrap;
   color: var(--t-solid);
@@ -141,28 +178,75 @@ const displayTemp = computed(() => {
 }
 
 .temp-unit {
-  font-size: 17px;
-  font-weight: 700;
-  opacity: 0.5;
+  font-size: 14px;
+  font-weight: 600;
+  opacity: 0.45;
 }
 
-/* 기온 눈금 막대 — el-progress 의 겉자리만 잡아준다 */
+/* 최저·최고 — 대표기온을 방해하지 않게 작고 흐리게 */
+.city-range {
+  margin: 6px 0 0;
+  font-size: 12px;
+  white-space: nowrap;
+  color: var(--dash-ink-weak);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---- 기온 눈금 ----
+   position:relative 기준면 위에 자·기준선·구간·점을 겹쳐 놓는다.
+   왼쪽 끝이 −20℃, 오른쪽 끝이 40℃ 로 카드마다 항상 같다. */
 .temp-scale {
-  margin-top: 18px;
+  position: relative;
+  height: 12px;
+  margin-top: 14px;
+  margin-bottom: 2px;
 }
 
-/* el-progress 내부 요소는 scoped 로 닿지 않아 :deep() 이 필요하다 */
-.temp-scale :deep(.el-progress-bar__outer) {
+/* 자 — 전체 구간 */
+.scale-track {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 2px;
+  transform: translateY(-50%);
   background-color: var(--dash-line-soft);
   border-radius: var(--dash-r-pill);
 }
 
-/* EP 기본색은 강조색 하나뿐이라 단계색으로 바꾼다 */
-.temp-scale :deep(.el-progress-bar__inner) {
-  background-color: var(--t-solid);
+/* 0℃ 기준선 */
+.scale-zero {
+  position: absolute;
+  top: 50%;
+  width: 1px;
+  height: 8px;
+  transform: translateY(-50%);
+  background-color: var(--dash-line);
+}
+
+/* 그날의 최저~최고 구간 */
+.scale-span {
+  position: absolute;
+  top: 50%;
+  height: 3px;
+  transform: translateY(-50%);
   border-radius: var(--dash-r-pill);
-  /* EP 기본(.6s)은 느려서 화면 전체와 맞춘다 */
-  transition: width var(--dash-ease-out);
+  background-color: var(--t-solid);
+  opacity: 0.32;
+  transition: all var(--dash-ease-out);
+}
+
+/* 대표기온. 흰 테두리를 둘러 구간 띠 위에서도 또렷하게 보인다. */
+.scale-dot {
+  position: absolute;
+  top: 50%;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  background-color: var(--t-solid);
+  box-shadow: 0 0 0 2px var(--dash-surface);
+  transition: left var(--dash-ease-out);
 }
 
 /* 아래쪽 줄 — margin-top:auto 로 카드 높이가 달라도 바닥에 붙는다 */
@@ -172,7 +256,7 @@ const displayTemp = computed(() => {
   flex-wrap: wrap; /* 카드가 좁아지면 버튼이 아랫줄로 내려간다 */
   gap: 8px;
   margin-top: auto;
-  padding-top: 14px;
+  padding-top: 10px;
 }
 
 /* 단계 라벨 — 눈금과 기온이 이미 색으로 알려주므로 글자만 */

@@ -4,17 +4,20 @@ import WeatherIcon from '@/components/exercise/WeatherIcon.vue'
 </script>
 
 <template>
-  <!-- 이모지는 기기마다 모양이 달라 카드와 같은 SVG 아이콘을 쓴다 -->
-  <h1 class="app-title">
-    <WeatherIcon class="title-icon" code="02d" />
-    <span class="title-text">날씨 대시보드</span>
-  </h1>
-
   <!-- 요구사항 2 — Navigation Bar. a 태그 대신 RouterLink 를 쓴다.
-       a 태그는 브라우저를 새로고침시켜 메모리의 반응형 데이터를 전부 초기화한다. -->
+       a 태그는 브라우저를 새로고침시켜 메모리의 반응형 데이터를 전부 초기화한다.
+       제목을 네비 안으로 넣었다. 예전에는 위에 h1 이 따로 있어
+       '날씨 대시보드'가 세로로 두 번 나오고 상단 130px 이 그대로 낭비됐다. -->
   <nav class="nav-bar">
-    <RouterLink to="/" class="nav-link">🌤️ 날씨 대시보드</RouterLink>
-    <RouterLink to="/about" class="nav-link">ℹ️ 서비스 소개</RouterLink>
+    <!-- 이모지는 기기마다 모양이 달라 카드와 같은 SVG 아이콘을 쓴다 -->
+    <h1 class="app-title">
+      <WeatherIcon class="title-icon" code="02d" />
+      <span class="title-text">날씨 대시보드</span>
+    </h1>
+
+    <RouterLink to="/" class="nav-link">대시보드</RouterLink>
+    <RouterLink to="/map" class="nav-link">지도</RouterLink>
+    <RouterLink to="/about" class="nav-link">서비스 소개</RouterLink>
 
     <!-- 요구사항 2 — Navigation Bar 옆에 단위 변경 UI 배치 -->
     <UnitToggler class="nav-toggler" />
@@ -27,45 +30,32 @@ import WeatherIcon from '@/components/exercise/WeatherIcon.vue'
 </template>
 
 <style scoped>
-/* 제목 — 크기·굵기·자간만으로 존재감을 만든다 */
+/* 제목 — 네비 바 안의 로고 자리 */
 .app-title {
-  max-width: var(--dash-width);
-  margin: 0 auto;
-  padding: 42px 0 20px;
   display: flex;
   align-items: center;
-  gap: 11px;
+  gap: 8px;
+  margin: 0;
+  padding: 0 14px 0 10px;
+  border-right: 1px solid rgba(255, 255, 255, 0.14);
+  margin-right: 6px;
 }
 
 /* 강조색으로 칠해 로고처럼 */
 .title-icon {
-  width: 30px;
-  height: 30px;
+  width: 20px;
+  height: 20px;
   stroke-width: 1.9;
   color: var(--dash-accent);
 }
 
+/* 어두운 네비 바 위라 흰색으로 */
 .title-text {
-  font-size: 30px;
+  font-size: 16px;
   font-weight: 800;
-  letter-spacing: -0.045em;
-  color: var(--dash-ink);
-}
-
-/* 좁은 화면에서는 제목을 한 단계 줄인다 */
-@media (max-width: 480px) {
-  .app-title {
-    padding: 28px 0 16px;
-  }
-
-  .title-icon {
-    width: 24px;
-    height: 24px;
-  }
-
-  .title-text {
-    font-size: 24px;
-  }
+  letter-spacing: -0.03em;
+  color: #ffffff;
+  white-space: nowrap;
 }
 
 .nav-bar {
@@ -75,7 +65,7 @@ import WeatherIcon from '@/components/exercise/WeatherIcon.vue'
   z-index: 10;
 
   max-width: var(--dash-width);
-  margin: 0 auto;
+  margin: 20px auto 0;
   display: flex;
   align-items: center;
   gap: 4px;

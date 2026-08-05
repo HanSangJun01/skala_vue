@@ -13,6 +13,13 @@ const router = createRouter({
       component: () => import('@/views/WeatherHomeView.vue'),
     },
     {
+      // 지도. Leaflet 과 그 CSS 를 함께 들고 오므로 무거운 편인데,
+      // 동적 import 라서 이 주소로 들어올 때만 내려받는다.
+      path: '/map',
+      name: 'WeatherMap',
+      component: () => import('@/views/WeatherMapView.vue'),
+    },
+    {
       path: '/about',
       name: 'WeatherAbout',
       component: () => import('@/views/WeatherAboutView.vue'),

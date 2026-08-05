@@ -23,8 +23,12 @@ export function getTempTier(celsius) {
   return TEMP_TIERS[TEMP_TIERS.length - 1]
 }
 
-// 눈금 막대가 다루는 범위
-export const SCALE_MIN = -20
+// 눈금이 다루는 범위. 모든 카드가 이 한 자를 공유하므로
+// 목록에서 가장 추운 지점이 잘리지 않아야 한다.
+// 남극이 −60~−42℃ 로 들어오면서 예전 하한(−20)으로는 왼쪽 끝에 눌려 붙고
+// 최저~최고 띠가 폭 0 으로 사라졌다.
+// 20 단위로 떨어져야 머리글(−60/−40/−20/0/20/40)이 눈금과 정확히 맞는다.
+export const SCALE_MIN = -60
 export const SCALE_MAX = 40
 
 // 섭씨 기온 → 막대 채움 비율(0~100). 범위 밖은 잘라낸다.

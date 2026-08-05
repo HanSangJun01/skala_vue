@@ -1,35 +1,21 @@
 @import './base.css';
 
+/* 폭과 좌우 여백은 dashboard.css 가 #app 에서 다시 잡는다.
+   여기서는 Vue 스캐폴드가 남긴 값만 지운다. */
 #app {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
   font-weight: normal;
 }
 
-a,
-.green {
+/* Vue 초기 템플릿의 형광 초록 링크(hsla(160,100%,37%))를 걷어냈다.
+   화면 어디에도 초록이 없는데 링크만 초록이라, App.vue 가 nav-link 에서
+   매번 색을 덮어쓰고 있었다. 기본값을 화면 강조색에 맞춘다. */
+a {
+  color: var(--dash-accent-deep);
   text-decoration: none;
-  color: hsla(160, 100%, 37%, 1);
-  transition: 0.4s;
-  padding: 3px;
 }
 
 @media (hover: hover) {
   a:hover {
-    background-color: hsla(160, 100%, 37%, 0.2);
+    text-decoration: underline;
   }
 }
-/* 
-@media (min-width: 1024px) {
-  body {
-    display: flex;
-    place-items: center;
-  }
-
-  #app {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    padding: 0 2rem;
-  }
-} */

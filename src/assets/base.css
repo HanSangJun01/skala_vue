@@ -32,8 +32,6 @@
 
   --color-heading: var(--vt-c-text-light-1);
   --color-text: var(--vt-c-text-light-1);
-
-  --section-gap: 160px;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -66,17 +64,13 @@ body {
     color 0.5s,
     background-color 0.5s;
   line-height: 1.6;
+  /* 실제 글꼴은 dashboard.css 의 --dash-font 가 정한다.
+     맨 앞에 있던 Inter 는 불러오는 코드가 없어 늘 건너뛰던 이름이라 지웠다. */
   font-family:
-    Inter,
     -apple-system,
     BlinkMacSystemFont,
     'Segoe UI',
     Roboto,
-    Oxygen,
-    Ubuntu,
-    Cantarell,
-    'Fira Sans',
-    'Droid Sans',
     'Helvetica Neue',
     sans-serif;
   font-size: 15px;

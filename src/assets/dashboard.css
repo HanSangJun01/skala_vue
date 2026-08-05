@@ -13,12 +13,14 @@
   --dash-ink-mid: #52646e;
   --dash-ink-weak: #7f929e;
 
-  /* 면과 선. 배경이 거의 흰색이라 카드 경계는 테두리가 책임진다 */
-  --dash-page: #fcfdff;
+  /* 면과 선. 배경이 거의 흰색이라 카드 경계는 테두리가 책임진다.
+     중성색은 회색이 아니라 강조색(#1f7fa8) 쪽으로 살짝 기울여 둔다.
+     같은 계열이라야 흰 판과 파란 강조가 한 화면에서 겉돌지 않는다. */
+  --dash-page: #fbfcfe;
   --dash-surface: #ffffff;
-  --dash-sunken: #f4f7fc;
-  --dash-line: #e1e7f0;
-  --dash-line-soft: #eef2f8;
+  --dash-sunken: #f2f6f9;
+  --dash-line: #dde5ec;
+  --dash-line-soft: #eaf0f5;
 
   /* 오류 표시 */
   --dash-danger-bg: #fdeeec;
@@ -29,44 +31,50 @@
      grad — 상세 히어로처럼 큰 색면용 / solid — 목록의 작은 지점용
      여섯 색을 크게 늘어놓으면 흩어져 보여서, 목록은 solid 만 쓴다 */
 
+  /* grad 는 상세 히어로가 화면의 3분의 1을 칠하는 자리라 채도를 한 단계 낮췄다.
+     예전 값(#f0653f 등)은 형광에 가까워 위에 얹은 흰 글씨가 눈부셨다.
+     solid 는 카드의 작은 점·숫자에만 쓰이므로 원래 채도를 유지한다. */
+
   /* 🔥 폭염 — 30℃ 이상 */
-  --dash-scorching-grad: linear-gradient(135deg, #f0653f 0%, #d92d3f 100%);
-  --dash-scorching-solid: #d4443c;
+  --dash-scorching-grad: linear-gradient(118deg, #d9583f 0%, #b23640 100%);
+  --dash-scorching-solid: #c4453a;
 
   /* ☀️ 더움 — 25~29℃ */
-  --dash-hot-grad: linear-gradient(135deg, #f5a742 0%, #ee7a3c 100%);
-  --dash-hot-solid: #d9782f;
+  --dash-hot-grad: linear-gradient(118deg, #dd9440 0%, #cc6c39 100%);
+  --dash-hot-solid: #c76e2c;
 
   /* 🌤 온화 — 15~24℃ */
-  --dash-mild-grad: linear-gradient(135deg, #4fbe95 0%, #2f9e8a 100%);
-  --dash-mild-solid: #2f9578;
+  --dash-mild-grad: linear-gradient(118deg, #46a888 0%, #2a8a79 100%);
+  --dash-mild-solid: #238a6f;
 
   /* 🍃 선선함 — 5~14℃ */
-  --dash-cool-grad: linear-gradient(135deg, #56b0e8 0%, #3f86d6 100%);
-  --dash-cool-solid: #3d84cf;
+  --dash-cool-grad: linear-gradient(118deg, #4d9bd0 0%, #3a76bd 100%);
+  --dash-cool-solid: #3878be;
 
   /* ❄️ 추움 — -5~4℃ */
-  --dash-cold-grad: linear-gradient(135deg, #4a7fd4 0%, #3a56bd 100%);
-  --dash-cold-solid: #4059b5;
+  --dash-cold-grad: linear-gradient(118deg, #4470bd 0%, #3549a6 100%);
+  --dash-cold-solid: #3b51ab;
 
   /* 🥶 혹한 — -5℃ 미만 */
-  --dash-freezing-grad: linear-gradient(135deg, #7a6ee0 0%, #4f3fa8 100%);
-  --dash-freezing-solid: #5a4ca8;
+  --dash-freezing-grad: linear-gradient(118deg, #6c62c8 0%, #473a95 100%);
+  --dash-freezing-solid: #52449b;
 
   /* 상단 네비게이션 */
   --dash-nav-grad: linear-gradient(135deg, #1d3140 0%, #14232c 100%);
 
-  /* 모서리 둥글기 */
-  --dash-r-sm: 8px;
-  --dash-r-md: 12px;
-  --dash-r-lg: 18px;
-  --dash-r-xl: 24px;
+  /* 모서리 둥글기 — 한 단계씩 줄였다.
+     24px 는 카드가 알약처럼 보여서 계기판보다 장난감에 가까웠다. */
+  --dash-r-sm: 7px;
+  --dash-r-md: 11px;
+  --dash-r-lg: 14px;
+  --dash-r-xl: 16px;
   --dash-r-pill: 999px;
 
-  /* 그림자 — 가까운 것과 먼 것을 겹친 3단계 */
-  --dash-shadow-sm: 0 1px 2px rgba(20, 28, 40, 0.05);
-  --dash-shadow-md: 0 1px 3px rgba(20, 28, 40, 0.05), 0 6px 16px rgba(20, 28, 40, 0.07);
-  --dash-shadow-lg: 0 3px 8px rgba(20, 28, 40, 0.07), 0 14px 32px rgba(20, 28, 40, 0.11);
+  /* 그림자 — 경계는 테두리가 책임지고 그림자는 거들기만 한다.
+     흰 판이 여러 겹 쌓일 때 그림자가 짙으면 화면이 텁텁해진다. */
+  --dash-shadow-sm: 0 1px 2px rgba(20, 28, 40, 0.04);
+  --dash-shadow-md: 0 1px 2px rgba(20, 28, 40, 0.04), 0 4px 10px rgba(20, 28, 40, 0.05);
+  --dash-shadow-lg: 0 2px 6px rgba(20, 28, 40, 0.06), 0 10px 24px rgba(20, 28, 40, 0.08);
 
   /* 본문 폭 — 모든 View 와 네비가 같은 값을 써야 화면 전환 시 안 흔들린다.
      홈에 달력 사이드바가 생겨 넓혔다. */
@@ -77,15 +85,20 @@
   --dash-ease-out: 420ms cubic-bezier(0.16, 1, 0.3, 1);
 
   /* 한글이 깨지지 않는 글꼴 우선순위 */
+  /* 한글이 깨지지 않는 글꼴 우선순위.
+     예전에는 맨 앞이 'Pretendard' 였는데 @font-face 도 CDN 링크도 없어서
+     한 번도 쓰인 적이 없다. 코드와 실제가 어긋나므로 지웠다. */
   --dash-font:
-    'Pretendard', 'Apple SD Gothic Neo', 'Malgun Gothic', -apple-system, BlinkMacSystemFont,
+    'Apple SD Gothic Neo', 'Malgun Gothic', -apple-system, BlinkMacSystemFont, system-ui,
     sans-serif;
 }
 
-/* base.css 가 다크 모드에서 body 를 검게 칠하므로 여기서 배경을 고정한다 */
+/* base.css 가 다크 모드에서 body 를 검게 칠하므로 여기서 배경을 고정한다.
+   예전 그라디언트(#e0ebff)는 라벤더 쪽으로 치우쳐 흰 카드와 강조색 사이에서 겉돌았다.
+   강조색과 같은 계열로 낮춰 카드가 떠 보이게 한다. */
 body {
   background-color: var(--dash-page);
-  background-image: linear-gradient(180deg, #e0ebff 0%, #f7f8fe 62%);
+  background-image: linear-gradient(180deg, #e7edf3 0%, #f8fafc 58%);
   background-repeat: no-repeat;
   background-attachment: fixed;
   color: var(--dash-ink);

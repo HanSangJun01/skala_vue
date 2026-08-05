@@ -8,8 +8,7 @@ defineProps({
 
 <template>
   <section class="panel">
-    <!-- 제목 왼쪽의 초록 막대는 순수 장식이라 CSS(::before)로 그린다.
-         장식용 요소를 template 에 넣으면 마크업이 지저분해진다. -->
+    <!-- 제목 왼쪽 막대는 장식이라 CSS(::before)로 그린다 -->
     <h2 v-if="title !== ''" class="panel-title">{{ title }}</h2>
 
     <!-- 부모가 아무것도 주입하지 않으면 아래 내용이 대신 표시된다 (p154) -->
@@ -41,7 +40,7 @@ defineProps({
   color: var(--dash-ink-mid);
 }
 
-/* 제목 앞의 작은 초록 막대 */
+/* 제목 앞의 작은 막대 */
 .panel-title::before {
   content: '';
   width: 3px;

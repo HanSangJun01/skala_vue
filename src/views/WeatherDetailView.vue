@@ -4,15 +4,17 @@ import { useRoute, useRouter } from 'vue-router'
 import axios from 'axios'
 import { useConfigStore } from '@/stores/configStore'
 import { getTempTier } from '@/utils/temperature'
+import { toDateKey, formatDateLabel } from '@/utils/date'
 import WeatherIcon from '@/components/exercise/WeatherIcon.vue'
 
 // API 키는 .env 의 VITE_WEATHER_API_KEY 에서 읽는다.
 const API_KEY = import.meta.env.VITE_WEATHER_API_KEY
-const BASE_URL = 'https://api.openweathermap.org/data/2.5/weather'
+// 예보만 쓴다. 현재 날씨(2.5/weather)에 있던 값이 예보에도 전부 있고,
+// 예보를 쓰면 홈에서 고른 날짜를 그대로 보여줄 수 있다.
+const BASE_URL = 'https://api.openweathermap.org/data/2.5/forecast'
 
-// 주소의 cityId 를 검색어로 바꾸기 위한 목록
+// 주소의 cityId 를 검색어로 바꾸기 위한 목록.
 // ※ WeatherHomeView 의 목록과 항상 같아야 한다.
-//    여기에 없는 id 로 들어오면 통신하지 않고 "도시 정보 없음" 화면이 뜬다.
 const targetCities = [
   { id: 'kr-seoul', name: '서울', query: 'Seoul,KR' },
   { id: 'kr-busan', name: '부산', query: 'Busan,KR' },
@@ -32,15 +34,20 @@ const router = useRouter()
 const configStore = useConfigStore()
 
 const cityDetail = ref(null)
+// 실제로 보여준 날짜. 주소로 받은 날짜에 예보가 없으면 첫날로 밀린다.
+const shownDateKey = ref('')
 
 // 통신 상태
 const isLoading = ref(false)
 const errorMessage = ref('')
 
-// 주소의 :cityId 에 해당하는 도시의 현재 날씨를 받아온다
+// 홈에서 ?date=2026-08-09 로 넘겨준다. 없으면 오늘.
+const requestedDateKey = computed(() => route.query.date ?? toDateKey(new Date()))
+
+// 주소의 :cityId 에 해당하는 도시의 예보를 받아온다
 const fetchDetail = async () => {
   const cityId = route.params.cityId
-  console.log(`🔎 상세 페이지 진입: ${cityId}`)
+  console.log(`🔎 상세 페이지 진입: ${cityId} / ${requestedDateKey.value}`)
 
   // 목록에서 해당 도시를 찾는다
   let target = null
@@ -63,17 +70,50 @@ const fetchDetail = async () => {
     const url = `${BASE_URL}?q=${target.query}&appid=${API_KEY}&units=metric&lang=kr`
     const response = await axios.get(url)
 
+    // 3시간 간격 40개를 날짜별로 묶는다
+    const buckets = {}
+    for (const item of response.data.list) {
+      const key = toDateKey(new Date(item.dt * 1000))
+      if (!buckets[key]) buckets[key] = []
+      buckets[key].push(item)
+    }
+
+    // 요청한 날짜에 예보가 없으면(범위 밖) 가장 이른 날로 대신한다
+    const key = buckets[requestedDateKey.value]
+      ? requestedDateKey.value
+      : Object.keys(buckets).sort()[0]
+    const items = buckets[key]
+    if (!items) return
+
+    shownDateKey.value = key
+
+    // 그날을 대표할 시점은 정오에 가장 가까운 것으로 고른다.
+    // 홈 목록과 같은 기준이라야 두 화면의 숫자가 어긋나지 않는다.
+    let pick = items[0]
+    let bestGap = Infinity
+    for (const item of items) {
+      const gap = Math.abs(new Date(item.dt * 1000).getHours() - 12)
+      if (gap < bestGap) {
+        bestGap = gap
+        pick = item
+      }
+    }
+
+    const temps = items.map((item) => item.main.temp)
+
     // Axios 는 response.data 가 이미 JSON 으로 파싱되어 있다
     cityDetail.value = {
       id: target.id,
       name: target.name,
-      temp: Math.round(response.data.main.temp),
-      status: response.data.weather[0].description,
+      temp: Math.round(pick.main.temp),
+      tempMin: Math.round(Math.min(...temps)),
+      tempMax: Math.round(Math.max(...temps)),
+      status: pick.weather[0].description,
       // 아이콘 코드('01d', '04n' 같은 값). 그림을 고르는 데 쓴다.
-      icon: response.data.weather[0].icon,
-      humidity: response.data.main.humidity,
-      wind: response.data.wind.speed,
-      pressure: response.data.main.pressure,
+      icon: pick.weather[0].icon,
+      humidity: pick.main.humidity,
+      wind: pick.wind.speed,
+      pressure: pick.main.pressure,
     }
   } catch (error) {
     console.error('통신 중 에러가 발생했습니다:', error)
@@ -102,8 +142,20 @@ const displayTemp = computed(() => {
   return rawTemp
 })
 
-// 기온 단계(폭염~혹한). WeatherCard 와 같은 함수를 써야 두 화면이 어긋나지 않는다.
-// cityDetail 은 통신 전까지 null 이므로 그때는 기본값으로 온화를 쓴다.
+// 그날의 최저·최고도 같은 단위로 바꿔 보여준다
+const displayRange = computed(() => {
+  if (cityDetail.value === null) return null
+  const convert = (celsius) =>
+    configStore.unit === 'fahrenheit' ? Math.round((celsius * 9) / 5 + 32) : celsius
+  return { min: convert(cityDetail.value.tempMin), max: convert(cityDetail.value.tempMax) }
+})
+
+// 화면 위에 보여줄 날짜 문구
+const dateLabel = computed(() =>
+  shownDateKey.value === '' ? '' : formatDateLabel(shownDateKey.value),
+)
+
+// 기온 단계. 통신 전에는 cityDetail 이 null 이라 기본값을 쓴다.
 const tempTier = computed(() => {
   if (cityDetail.value === null) {
     return getTempTier(20)
@@ -118,27 +170,28 @@ const goHome = () => {
 
 <template>
   <div class="detail-view">
-    <!-- 통신 중 — 히어로와 지표 카드 자리를 미리 잡아 둔다 -->
-    <div v-if="isLoading">
-      <div class="skeleton-hero" aria-hidden="true"></div>
-      <div class="metric-grid" aria-hidden="true">
-        <div v-for="n in 3" :key="n" class="skeleton-metric"></div>
-      </div>
-      <p class="loading-caption">실시간 날씨를 불러오는 중입니다...</p>
-    </div>
+    <!-- 통신 중 — #template 슬롯에 직접 그리면 EP 기본 줄 모양 대신 이 배치가 쓰인다 -->
+    <el-skeleton v-if="isLoading" animated>
+      <template #template>
+        <el-skeleton-item variant="image" class="skeleton-hero" />
+        <div class="metric-grid">
+          <el-skeleton-item v-for="n in 3" :key="n" variant="image" class="skeleton-metric" />
+        </div>
+        <p class="loading-caption">실시간 날씨를 불러오는 중입니다...</p>
+      </template>
+    </el-skeleton>
 
     <!-- 통신 실패 -->
     <p v-else-if="errorMessage !== ''" class="state-box error-text">{{ errorMessage }}</p>
 
     <div v-else-if="cityDetail !== null">
-      <!-- 히어로 영역 — 도시명·기온·라벨을 한 덩어리로 묶어 먼저 읽히게 한다.
-           tier-폭염키 클래스가 배경 그라디언트까지 결정한다. -->
+      <!-- 히어로 — tier-* 클래스가 배경 그라디언트를 결정한다 -->
       <section class="detail-hero" :class="`tier-${tempTier.key}`">
         <h1 class="detail-title">{{ cityDetail.name }}</h1>
-        <p class="detail-sub">상세 기상관측</p>
+        <!-- 어느 날짜의 예보인지 -->
+        <p class="detail-sub">{{ dateLabel }} 예보</p>
 
-        <!-- 기온 왼쪽에 큰 날씨 그림을 세운다.
-             숫자만 있을 때보다 화면이 한눈에 읽힌다. -->
+        <!-- 기온 왼쪽의 큰 날씨 그림 -->
         <div class="hero-main">
           <WeatherIcon class="hero-icon" :code="cityDetail.icon" />
           <p class="hero-temp">
@@ -146,17 +199,27 @@ const goHome = () => {
           </p>
         </div>
 
+        <!-- 오늘의 최저·최고. 예보가 없는 도시면 이 줄만 빠진다. -->
+        <p v-if="displayRange !== null" class="hero-range">
+          <span class="range-item">
+            최저 <strong>{{ displayRange.min }}{{ configStore.unitSymbol }}</strong>
+          </span>
+          <span class="range-sep" aria-hidden="true"></span>
+          <span class="range-item">
+            최고 <strong>{{ displayRange.max }}{{ configStore.unitSymbol }}</strong>
+          </span>
+        </p>
+
         <p class="hero-status">{{ cityDetail.status }}</p>
 
-        <!-- 단계 라벨 — 카드 목록과 같은 판정 결과를 그대로 보여준다 -->
+        <!-- 단계 라벨 -->
         <p class="temp-label">
           {{ tempTier.emoji }} {{ tempTier.label }}
           <span class="temp-range">{{ tempTier.rangeText }}</span>
         </p>
       </section>
 
-      <!-- 기온과 날씨는 위 히어로에 이미 크게 나오므로 여기서는 뺐다.
-           남은 관측값 세 가지를 나란히 보여준다. -->
+      <!-- 기온·날씨는 히어로에 이미 나오므로 나머지 세 가지만 -->
       <dl class="metric-grid">
         <div class="metric-card">
           <dt>💧 습도</dt>
@@ -178,7 +241,7 @@ const goHome = () => {
       <p>'{{ route.params.cityId }}'에 해당하는 도시 정보가 없습니다.</p>
     </div>
 
-    <button class="home-btn" @click="goHome">← 대시보드 홈으로 이동</button>
+    <el-button class="home-btn" round @click="goHome">← 대시보드 홈으로 이동</el-button>
   </div>
 </template>
 
@@ -190,7 +253,7 @@ const goHome = () => {
   color: var(--dash-ink);
 }
 
-/* 히어로 카드 — 온도에 따라 배경 전체가 노을빛/하늘빛으로 바뀐다 */
+/* 히어로 카드 — 단계에 따라 배경색이 바뀐다 */
 .detail-hero {
   position: relative;
   overflow: hidden;
@@ -203,12 +266,12 @@ const goHome = () => {
   animation: dash-rise var(--dash-ease-out) backwards;
 }
 
-/* 배경 그라디언트는 .tier-* 가 넣어준 --t-grad 를 그대로 쓴다 */
+/* 배경은 .tier-* 가 넣어준 --t-grad */
 .detail-hero {
   background-image: var(--t-grad);
 }
 
-/* 오른쪽 위에 은은한 빛무리를 하나 얹어 평평한 느낌을 없앤다 */
+/* 오른쪽 위 빛무리 */
 .detail-hero::after {
   content: '';
   position: absolute;
@@ -243,8 +306,7 @@ const goHome = () => {
   margin-top: 18px;
 }
 
-/* 히어로 배경이 진한 색이라 흰 선으로 그려지고, 살짝 투명하게 낮춰
-   기온 숫자보다 뒤로 물러나 보이게 한다 */
+/* 기온 숫자보다 뒤로 물러나 보이게 살짝 투명하게 */
 .hero-icon {
   width: 62px;
   height: 62px;
@@ -269,14 +331,37 @@ const goHome = () => {
   color: rgba(255, 255, 255, 0.8);
 }
 
+/* 오늘의 최저·최고 */
+.hero-range {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin: 14px 0 0;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.78);
+  font-variant-numeric: tabular-nums;
+}
+
+.hero-range strong {
+  font-weight: 700;
+  color: #ffffff;
+}
+
+/* 최저와 최고 사이의 세로 구분선 */
+.range-sep {
+  width: 1px;
+  height: 12px;
+  background-color: rgba(255, 255, 255, 0.3);
+}
+
 .hero-status {
   margin: 10px 0 16px;
   font-size: 15px;
   color: rgba(255, 255, 255, 0.9);
 }
 
-/* 단계 라벨 — 색이 있는 히어로 배경 위에 올라가므로
-   단계색 대신 반투명 흰색으로 통일해야 글자가 읽힌다 */
+/* 단계 라벨 — 색 있는 배경 위라 반투명 흰색으로 */
 .temp-label {
   display: inline-flex;
   align-items: baseline;
@@ -346,36 +431,19 @@ const goHome = () => {
   color: var(--dash-ink-weak);
 }
 
-/* ---- 로딩 자리표시자 ---- */
+/* 로딩 자리표시자 — 회색과 반짝임은 el-skeleton-item 이 그린다 */
 .skeleton-hero {
   height: 210px;
   margin-bottom: 14px;
   border-radius: var(--dash-r-xl);
-  background-image: linear-gradient(
-    90deg,
-    var(--dash-line-soft) 40%,
-    var(--dash-sunken) 50%,
-    var(--dash-line-soft) 60%
-  );
-  background-size: 200% 100%;
-  animation: dash-shimmer 1.4s linear infinite;
 }
 
 .skeleton-metric {
   height: 84px;
   border-radius: var(--dash-r-lg);
-  background-image: linear-gradient(
-    90deg,
-    var(--dash-line-soft) 40%,
-    var(--dash-sunken) 50%,
-    var(--dash-line-soft) 60%
-  );
-  background-size: 200% 100%;
-  animation: dash-shimmer 1.4s linear infinite;
 }
 
-/* 이 문구만은 카드 안이 아니라 하늘색 배경 위에 바로 놓인다.
-   흐린 회색이면 배경에 묻히므로 한 단계 진한 색을 쓴다. */
+/* 배경 위에 바로 놓여서 한 단계 진한 색을 쓴다 */
 .loading-caption {
   margin: 14px 0 18px;
   text-align: center;
@@ -419,27 +487,17 @@ const goHome = () => {
   border: 1px dashed var(--dash-line);
 }
 
+/* 홈 버튼. el-button 은 색을 --el-button-* 변수로 읽는다 */
 .home-btn {
-  padding: 11px 18px;
-  font-family: inherit;
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--dash-ink-mid);
-  background-color: var(--dash-surface);
-  border: 1px solid var(--dash-line);
-  border-radius: var(--dash-r-pill);
-  cursor: pointer;
-  transition:
-    color var(--dash-ease),
-    background-color var(--dash-ease),
-    border-color var(--dash-ease),
-    box-shadow var(--dash-ease);
-}
-
-.home-btn:hover {
-  color: #ffffff;
-  background-color: var(--dash-accent);
-  border-color: var(--dash-accent);
-  box-shadow: none;
+  --el-button-bg-color: var(--dash-surface);
+  --el-button-border-color: var(--dash-line);
+  --el-button-text-color: var(--dash-ink-mid);
+  --el-button-hover-bg-color: var(--dash-accent);
+  --el-button-hover-border-color: var(--dash-accent);
+  --el-button-hover-text-color: #ffffff;
+  --el-button-active-bg-color: var(--dash-accent-deep);
+  --el-button-active-border-color: var(--dash-accent-deep);
+  --el-button-active-text-color: #ffffff;
+  --el-button-font-weight: 700;
 }
 </style>

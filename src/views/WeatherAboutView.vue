@@ -16,14 +16,14 @@ const goHome = () => {
       <p class="about-lead">이 서비스는 Vue 3 학습용으로 만든 날씨 대시보드입니다.</p>
 
       <ul class="about-list">
-        <!-- 강조는 인라인 style 대신 클래스로 뺀다. 나중에 색을 바꿀 때 한 곳만 고치면 된다. -->
+        <!-- 강조는 인라인 style 대신 클래스로 -->
         <li><span class="about-mark">components/exercise/</span> 폴더 내부의 독립 부품 연동</li>
         <li>클라이언트 사이드 라우팅을 통한 새로고침 없는 화면 전환</li>
         <li>URL 쿼리 스트링 매핑을 활용한 실시간 검색 상태 동기화</li>
       </ul>
     </div>
 
-    <button class="home-btn" @click="goHome">← 메인 대시보드로 돌아가기</button>
+    <el-button class="home-btn" round @click="goHome">← 메인 대시보드로 돌아가기</el-button>
   </div>
 </template>
 
@@ -45,7 +45,6 @@ const goHome = () => {
 .about-box {
   margin-bottom: 18px;
   padding: 22px;
-  /* 다른 화면의 카드와 같은 유리 질감으로 통일한다 */
   background-color: var(--dash-surface);
   border: 1px solid var(--dash-line);
   border-radius: var(--dash-r-xl);
@@ -69,7 +68,7 @@ const goHome = () => {
   color: var(--dash-ink-mid);
 }
 
-/* 목록 앞의 점 색만 강조색으로 바꾼다 */
+/* 목록 앞의 점 색 */
 .about-list li::marker {
   color: var(--dash-accent);
 }
@@ -78,7 +77,7 @@ const goHome = () => {
   margin-top: 8px;
 }
 
-/* 폴더 경로 강조 — 코드처럼 보이게 한다 */
+/* 폴더 경로 — 코드처럼 */
 .about-mark {
   padding: 2px 6px;
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
@@ -88,27 +87,17 @@ const goHome = () => {
   border-radius: 5px;
 }
 
+/* 홈 버튼. el-button 은 색을 --el-button-* 변수로 읽는다 */
 .home-btn {
-  padding: 11px 18px;
-  font-family: inherit;
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--dash-ink-mid);
-  background-color: var(--dash-surface);
-  border: 1px solid var(--dash-line);
-  border-radius: var(--dash-r-pill);
-  cursor: pointer;
-  transition:
-    color var(--dash-ease),
-    background-color var(--dash-ease),
-    border-color var(--dash-ease),
-    box-shadow var(--dash-ease);
-}
-
-.home-btn:hover {
-  color: #ffffff;
-  background-color: var(--dash-accent);
-  border-color: var(--dash-accent);
-  box-shadow: none;
+  --el-button-bg-color: var(--dash-surface);
+  --el-button-border-color: var(--dash-line);
+  --el-button-text-color: var(--dash-ink-mid);
+  --el-button-hover-bg-color: var(--dash-accent);
+  --el-button-hover-border-color: var(--dash-accent);
+  --el-button-hover-text-color: #ffffff;
+  --el-button-active-bg-color: var(--dash-accent-deep);
+  --el-button-active-border-color: var(--dash-accent-deep);
+  --el-button-active-text-color: #ffffff;
+  --el-button-font-weight: 700;
 }
 </style>

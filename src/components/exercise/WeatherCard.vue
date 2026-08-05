@@ -14,12 +14,10 @@ const emit = defineEmits(['select-card', 'click-detail'])
 
 const configStore = useConfigStore()
 
-// 기온 단계(폭염~혹한). 카드 색과 라벨 문구를 한 번에 결정한다.
-// 화씨로 바꾼 displayTemp 가 아니라 원본 섭씨를 넘겨야 한다.
+// 기온 단계. 원본 섭씨를 넘겨야 한다 (화씨를 넣으면 판정이 틀어진다)
 const tempTier = computed(() => getTempTier(props.cityItem.temp))
 
-// 눈금 막대의 채움 비율. 이것도 판정 기준은 원본 섭씨다.
-// 단위를 화씨로 바꿔도 막대 길이가 달라지면 안 되기 때문이다.
+// 눈금 막대 채움 비율. 단위를 바꿔도 길이는 그대로여야 하므로 섭씨 기준.
 const tempPercent = computed(() => getTempPercent(props.cityItem.temp))
 
 // 화면에 보여줄 기온. 원본 데이터는 항상 섭씨 숫자다.
@@ -33,15 +31,13 @@ const displayTemp = computed(() => {
 </script>
 
 <template>
-  <!-- tier-폭염키 클래스가 --t-solid 를 넣어준다.
-       목록에서는 그 단색을 기온 숫자와 눈금 막대, 두 곳에만 쓴다. -->
+  <!-- tier-* 클래스가 --t-solid 를 넣어준다. 목록에서는 두 곳에만 쓴다. -->
   <li class="weather-card" :class="`tier-${tempTier.key}`" @click="emit('select-card', cityItem)">
     <div class="card-head">
       <div class="card-info">
         <h3 class="city-name">{{ cityItem.name }}</h3>
 
-        <!-- 날씨 설명 앞에 그림을 붙인다.
-             글자만 있을 때보다 어떤 날씨인지 훨씬 빨리 알아본다. -->
+        <!-- 날씨 설명 앞의 그림 -->
         <p class="city-status">
           <WeatherIcon :code="cityItem.icon" />
           {{ cityItem.status }}
@@ -53,26 +49,29 @@ const displayTemp = computed(() => {
       </p>
     </div>
 
-    <!-- 기온 눈금 — 숫자만으로는 도시 간 차이가 한눈에 안 들어온다.
-         -20~40℃ 구간에서 이 도시가 어디쯤인지 막대 길이로 보여준다.
-         순수 시각 보조라 aria-hidden 으로 스크린리더에서는 건너뛴다. -->
-    <div
+    <!-- 기온 눈금 — -20~40℃ 중 어디쯤인지 막대로 보여준다.
+         show-text 를 끄지 않으면 오른쪽에 "63%" 가 따라붙는다.
+         색은 CSS 에서 --t-solid 를 읽으므로 color 속성을 쓰지 않는다. -->
+    <el-progress
       class="temp-scale"
+      :percentage="tempPercent"
+      :stroke-width="5"
+      :show-text="false"
       :title="`${SCALE_MIN}℃ ~ ${SCALE_MAX}℃ 중 ${cityItem.temp}℃`"
       aria-hidden="true"
-    >
-      <span class="temp-scale-fill" :style="{ width: `${tempPercent}%` }"></span>
-    </div>
+    />
 
     <div class="card-foot">
-      <!-- 단계 라벨. v-if 로 두 갈래를 적던 것을 단계 객체 하나로 대체했다. -->
+      <!-- 단계 라벨 -->
       <p class="temp-label">{{ tempTier.label }}</p>
 
-      <!-- 습도는 fetchWeather 에서 이미 받아 두고도 목록에서는 쓰지 않던 값이다 -->
+      <!-- 습도 -->
       <p class="humidity-chip">습도 {{ cityItem.humidity }}%</p>
 
       <!-- .stop 으로 위쪽 li 의 @click 까지 번지지 않게 한다 -->
-      <button class="detail-btn" @click.stop="emit('click-detail', cityItem)">상세보기</button>
+      <el-button class="detail-btn" size="small" round @click.stop="emit('click-detail', cityItem)">
+        상세보기
+      </el-button>
     </div>
   </li>
 </template>
@@ -91,8 +90,7 @@ const displayTemp = computed(() => {
     box-shadow var(--dash-ease),
     transform var(--dash-ease);
 
-  /* 목록에 나타날 때 아래에서 떠오른다.
-     --i 는 부모(WeatherHomeView)가 v-for 순번으로 넘겨준다. */
+  /* --i 는 부모가 v-for 순번으로 넘겨준다 */
   animation: dash-rise var(--dash-ease-out) backwards;
   animation-delay: calc(var(--i, 0) * 60ms);
 }
@@ -129,7 +127,7 @@ const displayTemp = computed(() => {
   color: var(--dash-ink-mid);
 }
 
-/* 기온 — 카드에서 가장 먼저 읽혀야 하므로 가장 크고 단계색으로 칠한다 */
+/* 기온 — 가장 먼저 읽혀야 하므로 크고 단계색으로 */
 .city-temp {
   margin: 0;
   font-size: 40px;
@@ -138,7 +136,7 @@ const displayTemp = computed(() => {
   letter-spacing: -0.04em;
   white-space: nowrap;
   color: var(--t-solid);
-  /* 숫자 폭을 고정해 35 -> 9 처럼 자릿수가 바뀌어도 흔들리지 않는다 */
+  /* 자릿수가 바뀌어도 폭이 흔들리지 않게 */
   font-variant-numeric: tabular-nums;
 }
 
@@ -148,26 +146,26 @@ const displayTemp = computed(() => {
   opacity: 0.5;
 }
 
-/* 기온 눈금 막대 */
+/* 기온 눈금 막대 — el-progress 의 겉자리만 잡아준다 */
 .temp-scale {
-  height: 5px;
   margin-top: 18px;
-  overflow: hidden;
+}
+
+/* el-progress 내부 요소는 scoped 로 닿지 않아 :deep() 이 필요하다 */
+.temp-scale :deep(.el-progress-bar__outer) {
   background-color: var(--dash-line-soft);
   border-radius: var(--dash-r-pill);
 }
 
-.temp-scale-fill {
-  display: block;
-  height: 100%;
+/* EP 기본색은 강조색 하나뿐이라 단계색으로 바꾼다 */
+.temp-scale :deep(.el-progress-bar__inner) {
   background-color: var(--t-solid);
   border-radius: var(--dash-r-pill);
-  /* 단위를 바꿔도 막대는 그대로지만, 목록이 갱신될 때 부드럽게 늘어난다 */
+  /* EP 기본(.6s)은 느려서 화면 전체와 맞춘다 */
   transition: width var(--dash-ease-out);
 }
 
-/* 아래쪽 줄 — 라벨·습도·상세보기 버튼.
-   margin-top:auto 로 카드 높이가 달라도 항상 바닥에 붙는다. */
+/* 아래쪽 줄 — margin-top:auto 로 카드 높이가 달라도 바닥에 붙는다 */
 .card-foot {
   display: flex;
   align-items: center;
@@ -177,7 +175,7 @@ const displayTemp = computed(() => {
   padding-top: 14px;
 }
 
-/* 단계 라벨 — 왼쪽 눈금과 기온 숫자가 이미 색으로 알려주므로 글자만 남긴다 */
+/* 단계 라벨 — 눈금과 기온이 이미 색으로 알려주므로 글자만 */
 .temp-label {
   margin: 0;
   font-size: 12px;
@@ -186,7 +184,7 @@ const displayTemp = computed(() => {
   color: var(--dash-ink);
 }
 
-/* 습도 — 라벨과 가운뎃점으로 구분하고 한 단계 흐리게 */
+/* 습도 — 가운뎃점으로 구분하고 흐리게 */
 .humidity-chip {
   margin: 0;
   font-size: 12px;
@@ -200,29 +198,18 @@ const displayTemp = computed(() => {
   margin-right: 7px;
 }
 
-/* 상세보기 버튼 — 카드 전체가 이미 눌리므로 평소엔 힘을 뺀다.
-   margin-left:auto 로 오른쪽 끝에 붙인다. */
+/* 상세보기 버튼. el-button 은 색을 --el-button-* 변수로 읽는다 */
 .detail-btn {
   margin-left: auto;
-  padding: 7px 13px;
-  font-family: inherit;
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--dash-ink-mid);
-  background-color: var(--dash-surface);
-  border: 1px solid var(--dash-line);
-  border-radius: var(--dash-r-pill);
-  cursor: pointer;
-  white-space: nowrap;
-  transition:
-    color var(--dash-ease),
-    background-color var(--dash-ease),
-    border-color var(--dash-ease);
-}
-
-.detail-btn:hover {
-  color: #ffffff;
-  background-color: var(--dash-accent);
-  border-color: var(--dash-accent);
+  --el-button-bg-color: var(--dash-surface);
+  --el-button-border-color: var(--dash-line);
+  --el-button-text-color: var(--dash-ink-mid);
+  --el-button-hover-bg-color: var(--dash-accent);
+  --el-button-hover-border-color: var(--dash-accent);
+  --el-button-hover-text-color: #ffffff;
+  --el-button-active-bg-color: var(--dash-accent-deep);
+  --el-button-active-border-color: var(--dash-accent-deep);
+  --el-button-active-text-color: #ffffff;
+  --el-button-font-weight: 700;
 }
 </style>

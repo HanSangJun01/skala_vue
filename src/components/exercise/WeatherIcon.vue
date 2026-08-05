@@ -1,22 +1,18 @@
 <script setup>
 import { computed } from 'vue'
 
-// OpenWeatherMap 이 응답에 담아주는 아이콘 코드를 그림으로 바꾼다.
-// 코드는 '숫자 두 자리 + d/n' 형태다. 예) 01d = 맑음(낮), 04n = 온흐림(밤)
-//
-// 이미지 파일을 따로 받지 않고 SVG 를 코드로 그리는 이유:
-//  - 네트워크 요청이 없어 로딩 중 깨진 이미지가 보이지 않는다
-//  - 글자색(currentColor)을 따라가므로 단계색·흰색 어디에 올려도 어울린다
-//  - 어떤 크기로 키워도 흐려지지 않는다
+// API 의 아이콘 코드('숫자 두 자리 + d/n')를 SVG 그림으로 바꾼다.
+// 예) 01d = 맑음(낮), 04n = 온흐림(밤)
+// 이미지 파일 대신 SVG 라서 네트워크 요청이 없고 currentColor 를 따라간다.
 const props = defineProps({
   code: { type: String, default: '' },
 })
 
-// 앞 두 자리가 날씨 종류, 끝 글자가 낮(d)/밤(n)이다
+// 앞 두 자리 = 날씨 종류, 끝 글자 = 낮(d)/밤(n)
 const kind = computed(() => props.code.slice(0, 2))
 const isNight = computed(() => props.code.endsWith('n'))
 
-// 코드별 사람이 읽을 이름. 이미지 대체 텍스트로 쓴다.
+// 대체 텍스트용 이름
 const LABELS = {
   '01': '맑음',
   '02': '구름 조금',
@@ -33,8 +29,7 @@ const label = computed(() => LABELS[kind.value] ?? '날씨')
 </script>
 
 <template>
-  <!-- 옆에 이미 한글 설명이 글자로 나오므로 그림은 장식이다.
-       그래도 그림만 보이는 자리를 대비해 title 로 이름을 남겨둔다. -->
+  <!-- 그림만 보이는 자리를 대비해 title 로 이름을 남긴다 -->
   <svg
     class="weather-icon"
     viewBox="0 0 24 24"
@@ -124,8 +119,7 @@ const label = computed(() => LABELS[kind.value] ?? '날씨')
       <path d="M17 21H9" />
     </template>
 
-    <!-- 모르는 코드가 오면 구름 한 덩이로 대신한다.
-         API 가 새 코드를 추가해도 아이콘 자리가 비어 보이지 않는다. -->
+    <!-- 모르는 코드는 구름으로 대신한다 -->
     <template v-else>
       <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z" />
     </template>
@@ -133,11 +127,8 @@ const label = computed(() => LABELS[kind.value] ?? '날씨')
 </template>
 
 <style scoped>
-/* 기본 크기는 옆 글자와 어울리는 1.15em.
-   :where() 로 감싸면 우선순위가 0이 되어, 쓰는 쪽에서
-   .hero-icon { width: 62px } 처럼 적기만 해도 덮어쓸 수 있다.
-   그냥 .weather-icon 으로 두면 우선순위가 같아져 어느 쪽이 이길지
-   파일이 묶이는 순서에 따라 달라진다. */
+/* 기본 크기 1.15em. :where() 로 우선순위를 0으로 만들어
+   쓰는 쪽에서 width 만 적어도 덮어쓸 수 있게 한다. */
 :where(.weather-icon) {
   width: 1.15em;
   height: 1.15em;

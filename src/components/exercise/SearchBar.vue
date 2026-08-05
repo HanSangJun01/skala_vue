@@ -16,11 +16,8 @@ const onInput = (event) => {
 </script>
 
 <template>
-  <!-- 예전에는 세로로 쌓인 블록이라 패널 하나를 통째로 차지했다.
-       지금은 정렬 드롭다운과 같은 줄에 놓이는 한 줄짜리 컨트롤이다. -->
   <div class="search-bar">
-    <!-- 돋보기는 장식이므로 입력창을 감싸고 CSS 로 위치만 잡는다.
-         이모지는 기기마다 모양이 달라 WeatherIcon 처럼 SVG 로 그린다. -->
+    <!-- 돋보기는 장식. 이모지는 기기마다 모양이 달라 SVG 로 그린다. -->
     <div class="search-field">
       <svg class="search-icon" viewBox="0 0 24 24" aria-hidden="true">
         <circle cx="11" cy="11" r="7" />
@@ -35,16 +32,14 @@ const onInput = (event) => {
         aria-label="도시 이름 검색"
       />
 
-      <!-- 검색 전에는 아무것도 거르지 않았으므로 '10건'은 사실이 아니다.
-           입력이 있을 때만 결과 수를 보여준다. -->
+      <!-- 검색 전에는 아무것도 거르지 않았으므로 건수를 띄우지 않는다 -->
       <span v-if="query !== ''" class="search-count">{{ resultCount }}건</span>
     </div>
   </div>
 </template>
 
 <style scoped>
-/* 아이콘·입력·건수를 한 줄에 세운다. 껍데기가 곧 입력창이라
-   :focus-within 으로 안쪽 input 이 초점을 받을 때 테두리를 칠한다. */
+/* 껍데기가 곧 입력창이라, 안쪽 input 이 초점을 받을 때 :focus-within 으로 칠한다 */
 .search-field {
   display: flex;
   align-items: center;

@@ -4,12 +4,10 @@ import WeatherIcon from '@/components/exercise/WeatherIcon.vue'
 </script>
 
 <template>
-  <!-- 요구사항 2 — Navigation Bar. a 태그 대신 RouterLink 를 쓴다.
-       a 태그는 브라우저를 새로고침시켜 메모리의 반응형 데이터를 전부 초기화한다.
-       제목을 네비 안으로 넣었다. 예전에는 위에 h1 이 따로 있어
-       '날씨 대시보드'가 세로로 두 번 나오고 상단 130px 이 그대로 낭비됐다. -->
+  <!-- 요구사항 2 — Navigation Bar.
+       a 태그 대신 RouterLink 를 쓴다. a 태그는 새로고침을 일으켜 반응형 데이터를 날린다. -->
   <nav class="nav-bar">
-    <!-- 이모지는 기기마다 모양이 달라 카드와 같은 SVG 아이콘을 쓴다 -->
+    <!-- 이모지는 기기마다 모양이 달라 SVG 아이콘을 쓴다 -->
     <h1 class="app-title">
       <WeatherIcon class="title-icon" code="02d" />
       <span class="title-text">날씨 대시보드</span>

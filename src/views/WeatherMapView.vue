@@ -3,8 +3,7 @@ import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import axios from 'axios'
 import L from 'leaflet'
-// Leaflet 은 자기 CSS 가 없으면 타일이 어긋나고 확대 버튼이 깨진다.
-// 컴포넌트에서 가져오면 이 화면을 열 때만 내려받는다(라우트가 지연 로딩이라).
+// 이 CSS 가 없으면 타일이 어긋나고 확대 버튼이 깨진다
 import 'leaflet/dist/leaflet.css'
 
 import { useConfigStore } from '@/stores/configStore'
@@ -15,8 +14,7 @@ const API_KEY = import.meta.env.VITE_WEATHER_API_KEY
 // 지금 날씨(예보가 아니라). 지도 위 핀은 '현재'가 자연스럽다.
 const WEATHER_URL = 'https://api.openweathermap.org/data/2.5/weather'
 
-// OpenWeatherMap 이 주는 날씨 타일. 지금 쓰는 API 키를 그대로 쓴다.
-// 목록으로는 절대 안 보이는 것 — 비구름이 어디서 어디로 오는 중인지가 보인다.
+// 지도 위에 겹칠 날씨 타일. 지금 쓰는 API 키를 그대로 쓴다.
 const LAYERS = [
   { key: 'temp_new', label: '기온' },
   { key: 'precipitation_new', label: '강수' },
@@ -32,8 +30,7 @@ const errorMessage = ref('')
 const cityTemps = ref({})
 const activeLayer = ref('temp_new')
 
-// Leaflet 인스턴스는 반응형일 필요가 없다.
-// ref() 로 감싸면 Vue 가 내부를 통째로 프록시로 감싸 지도가 느려지고 오작동한다.
+// ⚠️ ref() 로 감싸면 Vue 가 내부를 프록시로 만들어 지도가 느려지고 오작동한다
 let map = null
 let overlay = null
 let markerLayer = null
@@ -75,11 +72,9 @@ const fetchTemps = async () => {
   }
 }
 
-// 웹 메르카토르는 극점을 그릴 수 없다(위도 90 에서 무한대로 늘어난다).
-// Leaflet 이 다루는 한계가 ±85.05 라서, 남극(−90)은 그대로 두면 지도 밖으로 나간다.
-// 표시용으로만 잘라 쓰고 데이터(constants/cities.js)는 그대로 둔다.
-// 한계값(85.05)에 딱 붙이면 핀이 지도 맨 끝에 걸려, 배율을 맞출 때
-// 지도 아래로 빈 회색 띠가 생긴다. 조금 안쪽으로 들여 찍는다.
+// 웹 메르카토르는 극점을 그릴 수 없어 ±85.05 가 한계다. 남극(−90)은 그대로 두면
+// 지도 밖으로 나간다. 표시용으로만 자르고 데이터는 그대로 둔다.
+// 한계값에 딱 붙이면 지도 끝에 걸리므로 조금 안쪽으로.
 const MERCATOR_LIMIT = 81
 const toDrawable = (city) => ({
   lat: Math.max(-MERCATOR_LIMIT, Math.min(MERCATOR_LIMIT, city.lat)),
@@ -87,15 +82,11 @@ const toDrawable = (city) => ({
   clamped: Math.abs(city.lat) > MERCATOR_LIMIT,
 })
 
-// 화면에서 가까운 핀끼리 묶는다.
-// 한국 7개 지점은 세계 지도 배율에서 7px 안에 전부 겹쳐 하나로만 보였다.
-// 지도를 확대하면 자연히 흩어지므로, 매 배율마다 다시 계산한다.
-// 겹침을 막으려면 '점'이 아니라 '라벨'끼리 안 닿아야 한다.
-// 그런데 라벨 폭(약 90px)에 맞춰 반경을 키웠더니 헬싱키와 마라케시처럼
-// 전혀 다른 곳까지 한 묶음이 됐다. 반경을 키우는 대신 라벨을 줄인다.
+// 화면에서 가까운 핀끼리 묶는다. 배율마다 겹침이 달라져 매번 다시 계산한다.
 //
-// 넓게 볼 때(zoom < 4)는 기온만("36°", 약 38px), 확대하면 이름까지("서울 36°").
-// 라벨이 짧아지니 반경도 같이 줄일 수 있어 서로 다른 지점이 붙지 않는다.
+// 겹침은 '점'이 아니라 '라벨'끼리 안 닿아야 막힌다. 라벨 폭(약 90px)에 맞춰
+// 반경을 키우면 헬싱키·마라케시처럼 먼 곳까지 묶이므로, 반경 대신 라벨을 줄인다.
+// 넓게 볼 때(zoom < 4)는 기온만, 확대하면 이름까지.
 const NAME_ZOOM = 4
 const CLUSTER_RADIUS_PX = { compact: 44, full: 86 }
 
@@ -117,8 +108,7 @@ const groupByScreenDistance = (entries) => {
   return groups
 }
 
-// 핀을 그린다. 기본 마커 이미지는 번들러에서 경로가 깨지기로 유명하므로
-// divIcon(그냥 HTML)을 써서 이미지 자체를 쓰지 않는다.
+// 핀을 그린다. 기본 마커는 번들러에서 이미지 경로가 깨지므로 divIcon(HTML)을 쓴다.
 const buildMarkers = () => {
   if (map === null) return
   if (markerLayer !== null) markerLayer.remove()
@@ -137,14 +127,14 @@ const buildMarkers = () => {
     if (group.members.length === 1) {
       const tier = getTempTier(first.found.temp)
       const suffix = first.draw.clamped ? ' (극점 · 실제 위치는 더 남쪽)' : ''
-      // 넓게 볼 때는 이름을 빼 라벨을 짧게 — 이름은 title 로 남으니 정보가 사라지진 않는다
+      // 넓게 볼 때는 이름을 뺀다. 이름은 title 로 남는다.
       const label = isCompact()
         ? `<b>${toDisplayUnit(first.found.temp)}°</b>`
         : `${first.city.name} <b>${toDisplayUnit(first.found.temp)}°</b>`
       const icon = L.divIcon({
         className: 'temp-pin-wrap',
         html: `<span class="temp-pin tier-${tier.key}">${label}</span>`,
-        // 폭이 내용마다 달라 0 으로 두고 CSS transform 으로 좌표 위에 가운데 맞춘다
+        // 폭이 내용마다 달라 0 으로 두고 CSS transform 으로 가운데 맞춘다
         iconSize: [0, 0],
         iconAnchor: [0, 0],
       })
@@ -157,8 +147,7 @@ const buildMarkers = () => {
       continue
     }
 
-    // 여러 곳이 겹치면 개수와 기온 범위로 묶어 보여준다.
-    // 색은 그중 가장 더운 곳을 따른다 — 묶음에서 먼저 눈에 띄어야 할 값이다.
+    // 여러 곳이 겹치면 개수와 기온 범위로. 색은 그중 가장 더운 곳을 따른다.
     const temps = group.members.map((member) => member.found.temp)
     const hottest = Math.max(...temps)
     const coldest = Math.min(...temps)
@@ -172,16 +161,14 @@ const buildMarkers = () => {
     })
     L.marker([first.draw.lat, first.draw.lon], { icon, title: `${names} — 확대하면 나뉩니다` })
       .addTo(markerLayer)
-      // 묶음을 누르면 상세로 가지 않고 그 자리를 확대한다. 어느 지점인지 아직 모르므로.
+      // 어느 지점인지 아직 모르므로 상세 대신 확대한다
       .on('click', () => map.setView([first.draw.lat, first.draw.lon], map.getZoom() + 3))
   }
 }
 
 // 지금 화면 밖에 있는 지점들.
-// 모든 핀이 들어오도록 fitBounds 를 걸어 봤지만, 남극(−81°)과 중위도 도시를
-// 한 화면에 담으려면 배율이 1까지 내려가 세계 지도가 캔버스보다 작아진다.
-// 메르카토르에서 극점과 중위도를 함께 편히 보는 건 원래 안 되는 일이라,
-// 억지로 맞추는 대신 "밖에 이런 지점이 있다"고 알려주고 눌러서 가게 한다.
+// fitBounds 로 다 담으면 배율이 1까지 내려가 세계 지도가 캔버스보다 작아진다.
+// 극점과 중위도를 한 화면에 두는 건 메르카토르에서 원래 안 되므로, 안내로 꺼내 준다.
 const offscreen = ref([])
 
 const updateOffscreen = () => {
@@ -220,20 +207,19 @@ const applyLayer = () => {
 }
 
 onMounted(async () => {
-  // 좁은 화면에서 배율 2로 시작하면 세계 지도의 3분의 1만 보여서
-  // 지점 대부분이 '화면 밖'으로 밀린다. 폭에 맞춰 한 단계 넓게 잡는다.
+  // 좁은 화면에서 배율 2는 세계의 3분의 1만 보여 대부분이 화면 밖으로 밀린다
   const container = document.getElementById('weather-map')
   const startZoom = container !== null && container.clientWidth < 560 ? 1 : 2
 
   map = L.map('weather-map', {
     center: [30, 60],
     zoom: startZoom,
-    // 세계 지도를 옆으로 무한히 반복시키지 않는다. 같은 도시가 여러 번 나오면 헷갈린다.
+    // 옆으로 반복시키지 않는다. 같은 도시가 여러 번 나오면 헷갈린다.
     worldCopyJump: false,
     minZoom: 1,
   })
 
-  // 바탕 지도. OpenStreetMap 은 출처 표기가 이용 약관이라 attribution 을 지우지 말 것.
+  // ⚠️ OpenStreetMap 은 출처 표기가 이용 약관이다. attribution 을 지우지 말 것.
   L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; OpenStreetMap',
     maxZoom: 18,
@@ -246,13 +232,11 @@ onMounted(async () => {
 
   // 배율이 바뀌면 겹침 관계가 달라지므로 핀을 다시 묶는다.
   map.on('zoomend', buildMarkers)
-  // 화면 밖 목록은 옆으로 밀기만 해도 달라지므로 moveend 로 받는다.
-  // (moveend 는 확대·축소 뒤에도 함께 발생한다)
+  // 화면 밖 목록은 옆으로 밀어도 달라지므로 moveend 로 받는다
   map.on('moveend', updateOffscreen)
 })
 
-// 화면을 떠날 때 지도를 반드시 정리한다.
-// 남겨두면 Leaflet 이 붙여 둔 이벤트가 그대로 남아 메모리를 잡는다.
+// 정리하지 않으면 Leaflet 이 붙인 이벤트가 남아 메모리를 잡는다
 onBeforeUnmount(() => {
   if (map !== null) {
     map.remove()
@@ -291,12 +275,10 @@ watch(() => configStore.unit, buildMarkers)
 
     <p v-if="errorMessage !== ''" class="state-box error-text">{{ errorMessage }}</p>
 
-    <!-- Leaflet 이 이 요소 안에 지도를 그린다. 높이가 0 이면 아무것도 안 보이므로
-         CSS 에서 높이를 반드시 정해 줘야 한다. -->
+    <!-- ⚠️ 높이가 0 이면 지도가 안 보인다. CSS 에서 높이를 반드시 줄 것. -->
     <div id="weather-map" class="map-canvas"></div>
 
-    <!-- 화면 밖 지점 안내. 남극처럼 극단에 있는 지점은 배율을 아무리 맞춰도
-         다른 지점과 한 화면에 편히 담기지 않는다. 숨기는 대신 여기로 꺼내 준다. -->
+    <!-- 화면 밖 지점 안내 -->
     <div v-if="offscreen.length > 0" class="offscreen-bar">
       <span class="offscreen-label">화면 밖</span>
       <button
@@ -314,8 +296,8 @@ watch(() => configStore.unit, buildMarkers)
       <span class="legend-label">핀 색 = 기온 단계</span>
       <span class="legend-scale" aria-hidden="true">
         <span class="tier-freezing"></span><span class="tier-cold"></span>
-        <span class="tier-cool"></span><span class="tier-mild"></span>
-        <span class="tier-hot"></span><span class="tier-scorching"></span>
+        <span class="tier-cool"></span><span class="tier-mild"></span> <span class="tier-hot"></span
+        ><span class="tier-scorching"></span>
       </span>
       <span class="legend-hint">핀을 누르면 그 지점의 상세로 이동합니다</span>
     </div>
@@ -396,15 +378,13 @@ watch(() => configStore.unit, buildMarkers)
   }
 }
 
-/* 지도 밖(세계 지도의 위아래 끝 너머)은 타일이 없다.
-   Leaflet 기본값은 회색이라 렌더링이 깨진 것처럼 보이므로 화면 톤에 맞춘다. */
+/* 세계 지도 밖은 타일이 없다. 기본 회색은 깨진 것처럼 보이므로 화면 톤에 맞춘다. */
 .map-canvas :deep(.leaflet-container) {
   background-color: var(--dash-sunken);
   font-family: var(--dash-font);
 }
 
-/* 핀 — divIcon 은 Leaflet 이 만든 요소라 scoped 로 닿지 않는다.
-   :deep() 으로 뚫어야 색이 적용된다. */
+/* divIcon 은 Leaflet 이 만든 요소라 scoped 가 안 닿는다. :deep() 필요. */
 .map-canvas :deep(.temp-pin) {
   display: inline-flex;
   align-items: center;
@@ -419,7 +399,7 @@ watch(() => configStore.unit, buildMarkers)
   background-color: var(--t-solid);
   border-radius: var(--dash-r-pill);
   box-shadow: 0 1px 6px rgba(20, 28, 40, 0.35);
-  /* iconAnchor 를 0,0 으로 뒀으므로 여기서 좌표 위로 가운데 정렬한다 */
+  /* iconAnchor 가 0,0 이라 여기서 좌표 위로 가운데 정렬 */
   transform: translate(-50%, -50%);
   cursor: pointer;
 }

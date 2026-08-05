@@ -3,8 +3,7 @@ import { computed } from 'vue'
 import { getAqiGrade, POLLUTANTS, getPollutantPercent } from '@/utils/airQuality'
 
 // 상세 화면의 대기질 패널.
-// 등급 하나만 보여주면 '나쁨' 이 무엇 때문인지 알 수 없어서,
-// 항목별 농도를 막대로 같이 그린다. 오존 때문인지 미세먼지 때문인지가 갈린다.
+// 등급만 보면 '나쁨'의 원인을 알 수 없어 항목별 농도를 막대로 함께 그린다.
 const props = defineProps({
   // { aqi, components } — 없으면 안내만 보여준다
   air: { type: Object, default: null },
@@ -56,7 +55,7 @@ const rows = computed(() => {
       </dl>
     </div>
 
-    <!-- 대기질 예보는 5일까지만 온다. 예보 마지막 날은 값이 없다. -->
+    <!-- 대기질은 날씨보다 예보 기간이 짧아 마지막 날은 값이 없다 -->
     <p v-else class="air-empty">이 날짜의 대기질 예보는 아직 제공되지 않습니다.</p>
   </div>
 </template>
@@ -85,7 +84,7 @@ const rows = computed(() => {
   align-items: center;
 }
 
-/* 등급 — 이 패널에서 색을 쓰는 곳은 여기와 막대뿐이다 */
+/* 등급 — 이 패널에서 색을 쓰는 곳은 여기와 막대뿐 */
 .air-badge {
   min-width: 116px;
   padding: 14px 16px;

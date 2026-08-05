@@ -109,9 +109,8 @@ const filteredWeatherList = computed(() => {
   return weatherList.value.filter((city) => city.name.includes(searchQuery.value))
 })
 
-// 정렬까지 끝난 최종 목록. '오늘 제일 더운 곳'을 눈으로 훑지 않아도 되게 한다.
-// ⚠️ sort 는 원본 배열을 바꾸므로 반드시 복사본([...])을 정렬할 것.
-//    computed 안에서 filteredWeatherList 를 직접 sort 하면 그 값도 같이 뒤집힌다.
+// 정렬까지 끝난 최종 목록.
+// ⚠️ sort 는 원본을 바꾸므로 반드시 복사본([...])을 정렬할 것.
 const sortedWeatherList = computed(() => {
   const rows = [...filteredWeatherList.value]
   // 단위를 바꿔도 순서는 그대로여야 하므로 원본 섭씨로 비교한다
@@ -158,10 +157,8 @@ const fetchForecast = async () => {
   }
 }
 
-// 대기질을 따로 받아온다.
-// 일부러 날씨와 같은 묶음에 넣지 않았다 — 한 묶음이면 대기질 쪽이 실패할 때
-// 멀쩡한 날씨까지 같이 사라진다. 대기질은 있으면 좋은 정보이지 화면의 뼈대가 아니다.
-// allSettled 라서 특정 지점만 실패해도 나머지 지점의 칩은 그대로 나온다.
+// 대기질은 날씨와 같은 묶음에 넣지 않는다 — 한 묶음이면 대기질이 실패할 때
+// 멀쩡한 날씨까지 사라진다. allSettled 라 한 지점만 실패해도 나머지는 그대로 나온다.
 const fetchAirQuality = async () => {
   const results = await Promise.allSettled(
     targetCities.map((city) =>
@@ -230,8 +227,7 @@ const handleClickDetail = (city) => {
 
 <template>
   <div class="weather-app">
-    <!-- 날짜 — 예보가 있는 날만 가로로 늘어놓는다.
-         칩 자체가 이미 카드 모양이라 패널로 한 번 더 감싸지 않는다. -->
+    <!-- 칩 자체가 카드 모양이라 패널로 한 번 더 감싸지 않는다 -->
     <DateStrip
       :selected-key="selectedKey"
       :available-dates="availableDates"
@@ -240,12 +236,13 @@ const handleClickDetail = (city) => {
 
     <!-- 고른 날이 무슨 날인지 한 줄로 확인시켜 준다 -->
     <p class="date-caption">
-      <strong>{{ selectedKey === '' ? '날짜를 불러오는 중' : formatDateLabel(selectedKey) }}</strong>
+      <strong>{{
+        selectedKey === '' ? '날짜를 불러오는 중' : formatDateLabel(selectedKey)
+      }}</strong>
       <span v-if="selectedOffsetLabel !== ''" class="date-offset">{{ selectedOffsetLabel }}</span>
     </p>
 
-    <!-- 도구줄 — 검색과 정렬을 한 줄에 합쳤다.
-         예전에는 검색이 패널 하나를 통째로 차지해, 입력창 하나에 110px 이 들었다. -->
+    <!-- 도구줄 — 검색과 정렬을 한 줄에 -->
     <div class="toolbar">
       <SearchBar
         class="toolbar-search"
@@ -262,25 +259,23 @@ const handleClickDetail = (city) => {
     </div>
 
     <BaseDashboardCard title="지역별 날씨 현황">
-      <!-- 선택 상태 안내. 예전에는 화면 맨 아래에 있어 스크롤해야 보였다. -->
+      <!-- 선택 상태 안내 -->
       <p class="status-line" :class="{ 'is-idle': selectedCityInfo === '' }">
         <span v-if="selectedCityInfo !== ''">{{ selectedCityInfo }}</span>
         <span v-else>카드를 클릭하면 여기에 표시됩니다.</span>
       </p>
 
-      <!-- 눈금 머리글. 카드 그리드와 같은 열 구성을 써야 눈금이 세로로 맞는다.
-           패널 전체에 자 하나를 걸치면 '0' 이 화면 한가운데로 가버려
-           정작 카드 안의 0℃ 자리와 어긋난다. -->
+      <!-- ⚠️ 카드 그리드와 같은 열 구성이라야 눈금이 세로로 맞는다.
+           패널 전체에 자 하나를 걸치면 '0' 이 카드 안의 0℃ 자리와 어긋난다. -->
       <div
         v-if="!isLoading && errorMessage === '' && sortedWeatherList.length > 0"
         class="axis-head"
         aria-hidden="true"
       >
-        <!-- 눈금값이 20 단위로 고르게 떨어져야 space-between 위치와 실제
-             기온 위치가 맞는다. 값을 하나 빼거나 더하면 어긋난다. -->
+        <!-- 값이 20 단위로 고르게 떨어져야 space-between 위치와 기온 위치가 맞는다 -->
         <div v-for="n in 2" :key="n" class="axis-ruler">
-          <span>{{ SCALE_MIN }}℃</span><span>−40</span><span>−20</span><span>0</span>
-          <span>20</span><span>{{ SCALE_MAX }}℃</span>
+          <span>{{ SCALE_MIN }}℃</span><span>−40</span><span>−20</span><span>0</span> <span>20</span
+          ><span>{{ SCALE_MAX }}℃</span>
         </div>
       </div>
 
@@ -390,8 +385,7 @@ const handleClickDetail = (city) => {
   margin-bottom: 6px;
 }
 
-/* 자 한 벌. 카드 안쪽 여백(16px)만큼 좌우를 띄워야
-   카드의 .temp-scale 과 좌우 끝이 정확히 맞는다. */
+/* 카드 안쪽 여백(16px)만큼 띄워야 카드의 .temp-scale 과 좌우 끝이 맞는다 */
 .axis-ruler {
   display: flex;
   justify-content: space-between;

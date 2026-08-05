@@ -25,8 +25,7 @@ const router = useRouter()
 const configStore = useConfigStore()
 
 // 3시간 간격 원본을 날짜별로 묶어 통째로 들고 있는다.
-// 예전에는 요청한 하루치만 남기고 나머지 30여 개를 버렸는데,
-// 그러면 날짜를 바꿀 때마다 같은 응답을 다시 받아와야 한다.
+// 하루치만 남기면 날짜를 바꿀 때마다 같은 응답을 다시 받아야 한다.
 const bucketsByDate = ref({})
 // 날짜별 대기질 요약. 기온과 다른 축이라 따로 담는다.
 const airByDate = ref({})
@@ -89,8 +88,7 @@ const fetchDetail = async () => {
   }
 }
 
-// 대기질을 따로 받아온다. 날씨와 같은 try 안에 두면 대기질이 실패할 때
-// 멀쩡한 날씨까지 오류 화면으로 바뀐다. 여기서는 조용히 비워 둔다.
+// 날씨와 같은 try 안에 두면 대기질이 실패할 때 멀쩡한 날씨까지 오류 화면이 된다.
 const fetchAirQuality = async () => {
   const target = targetCity.value
   if (target === null) return
@@ -169,9 +167,7 @@ const displayRange = computed(() => {
   }
 })
 
-// 날짜 칸에 같이 그릴 날씨 그림과 최고기온.
-// 이미 받아둔 예보에서 뽑아내는 것이라 추가 통신이 없다.
-// 도시가 하나뿐인 화면이라 '그날의 최고기온'이 무엇을 가리키는지 분명하다.
+// 날짜 칸에 같이 그릴 날씨 그림과 최고기온. 받아둔 예보에서 뽑아내므로 추가 통신이 없다.
 const dayInfo = computed(() => {
   const result = {}
   for (const [key, items] of Object.entries(bucketsByDate.value)) {
@@ -194,9 +190,7 @@ const dayInfo = computed(() => {
 })
 
 // ---- 시간대별 그래프 ----
-// API 가 주는 3시간 간격 값을 그대로 쓴다. 예전에는 하루 1개(정오 대표값)만
-// 남기고 나머지를 버렸는데, 이미 받아온 데이터라 추가 통신이 없다.
-// 좌표는 아래 <svg viewBox="0 0 620 150"> 기준이다.
+// 좌표는 아래 <svg viewBox="0 0 620 150"> 기준.
 const CHART_LEFT = 35
 const CHART_RIGHT = 596
 const CHART_TOP = 30
@@ -226,7 +220,9 @@ const chartPoints = computed(() => {
 })
 
 // polyline 의 points 속성은 'x,y x,y ...' 형식의 문자열 하나를 받는다
-const chartLine = computed(() => chartPoints.value.map((point) => `${point.x},${point.y}`).join(' '))
+const chartLine = computed(() =>
+  chartPoints.value.map((point) => `${point.x},${point.y}`).join(' '),
+)
 
 // 화면 위에 보여줄 날짜 문구
 const dateLabel = computed(() =>
@@ -252,8 +248,8 @@ const nextCity = computed(() =>
   cityIndex.value < 0 ? null : targetCities[(cityIndex.value + 1) % targetCities.length],
 )
 
-// 도시를 바꾸면 주소의 :cityId 만 달라진다. 같은 컴포넌트가 재사용되어
-// onMounted 가 다시 불리지 않으므로 이동이 끝난 뒤 직접 다시 받아온다.
+// 주소만 달라지면 같은 컴포넌트가 재사용되어 onMounted 가 다시 불리지 않는다.
+// 이동이 끝난 뒤 직접 다시 받아온다.
 const goCity = async (city) => {
   await router.push({ path: '/weather/' + city.id, query: { date: shownDateKey.value } })
   fetchDetail()
@@ -288,8 +284,7 @@ const goHome = () => {
     <p v-else-if="errorMessage !== ''" class="state-box error-text">{{ errorMessage }}</p>
 
     <div v-else-if="cityDetail !== null">
-      <!-- 히어로 — tier-* 클래스가 배경 그라디언트를 결정한다.
-           세로로 쌓지 않고 가로로 눕혀 남는 높이를 그래프에 내준다. -->
+      <!-- 히어로 — tier-* 클래스가 배경 그라디언트를 결정한다 -->
       <section class="detail-hero" :class="`tier-${tempTier.key}`">
         <div class="hero-info">
           <h1 class="detail-title">{{ cityDetail.name }}</h1>
@@ -314,8 +309,7 @@ const goHome = () => {
         </div>
       </section>
 
-      <!-- 날짜 이동 — 예전에는 다른 날을 보려면 홈까지 돌아가야 했다.
-           이미 받아둔 데이터라 여기서 날짜를 바꿔도 통신하지 않는다. -->
+      <!-- 이미 받아둔 데이터라 날짜를 바꿔도 통신하지 않는다 -->
       <div class="detail-panel">
         <DateStrip
           :selected-key="shownDateKey"
@@ -367,10 +361,10 @@ const goHome = () => {
         </svg>
       </div>
 
-      <!-- 대기질 — 기온과 나란히 놓아야 '덥지만 나가도 되나'에 답이 된다 -->
+      <!-- 대기질 — 기온만으로는 '나가도 되나'에 답이 안 된다 -->
       <AirQualityPanel :air="shownAir" />
 
-      <!-- 관측 수치. 이모지는 기기마다 모양이 달라 WeatherIcon 처럼 SVG 로 그린다. -->
+      <!-- 이모지는 기기마다 모양이 달라 SVG 로 그린다 -->
       <dl class="metric-grid">
         <div class="metric-card">
           <dt>
@@ -405,7 +399,6 @@ const goHome = () => {
           <dd>{{ cityDetail.pressure }}<span class="metric-unit">hPa</span></dd>
         </div>
 
-        <!-- 강수확률 — 응답의 pop 필드에 있는데 그동안 안 쓰고 있었다 -->
         <div class="metric-card">
           <dt>
             <svg class="metric-icon" viewBox="0 0 24 24" aria-hidden="true">
@@ -418,7 +411,7 @@ const goHome = () => {
         </div>
       </dl>
 
-      <!-- 도시 이동 — 예전에는 옆 도시를 보려면 홈을 거쳐야 했다 -->
+      <!-- 도시 이동 -->
       <nav class="city-nav">
         <el-button v-if="prevCity" class="nav-btn" round @click="goCity(prevCity)">
           ← {{ prevCity.name }}
@@ -449,8 +442,7 @@ const goHome = () => {
   color: var(--dash-ink);
 }
 
-/* 히어로 — 단계에 따라 배경색이 바뀐다.
-   가로 배치라 예전(세로)보다 높이가 3분의 1로 줄었다. */
+/* 히어로 — 단계에 따라 배경색이 바뀐다 */
 .detail-hero {
   position: relative;
   overflow: hidden;

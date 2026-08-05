@@ -10,7 +10,9 @@ const configStore = useConfigStore()
     <span class="unit-label">
       날씨단위: {{ configStore.unit === 'celsius' ? '섭씨' : '화씨' }}({{ configStore.unitSymbol }})
     </span>
-    <el-button class="unit-btn" size="small" round @click="configStore.toggleUnit">단위변경</el-button>
+    <el-button class="unit-btn" size="small" round @click="configStore.toggleUnit"
+      >단위변경</el-button
+    >
   </div>
 </template>
 

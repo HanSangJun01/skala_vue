@@ -4,21 +4,14 @@ import { formatShortDate, getWeekdayLabel } from '@/utils/date'
 import WeatherIcon from '@/components/exercise/WeatherIcon.vue'
 
 // 예보가 있는 날만 가로로 늘어놓는다.
-// 예전에는 el-calendar 로 한 달(42칸)을 그렸는데, 정작 고를 수 있는 날은 6일뿐이라
-// 나머지 36칸이 전부 빈자리였다. 게다가 '지난달/다음달' 버튼은 눌러도
-// 예보가 없어 아무 일이 일어나지 않는 — 눌리는 척만 하는 버튼이었다.
-//
-// 이 컴포넌트는 상태를 갖지 않는다. 카드 목록도 같은 날짜를 써야 하므로
-// 고른 날짜는 부모가 들고 있어야 한다.
+// 상태를 갖지 않는다 — 카드 목록도 같은 날짜를 봐야 하므로 부모가 들고 있는다.
 const props = defineProps({
   // 'YYYY-MM-DD'. Date 객체가 아니라 문자열이라 부모에서 변환이 필요 없다.
   selectedKey: { type: String, default: '' },
   availableDates: { type: Array, default: () => [] },
 
-  // 날짜별 { icon, tempMax } — 있으면 칸에 날씨 그림과 최고기온을 같이 그린다.
-  // 홈은 넘기지 않는다. 서울과 남극이 한 목록에 있어서
-  // '그날의 최고기온'을 하나로 뽑으면 어느 도시 얘기도 아니게 되기 때문이다.
-  // 상세는 도시가 하나뿐이라 뜻이 분명해 넘긴다.
+  // 날짜별 { icon, tempMax } — 있으면 칸에 함께 그린다.
+  // 상세만 넘긴다. 홈은 서울과 남극이 섞여 있어 '그날의 최고기온'이 뜻을 갖지 못한다.
   dayInfo: { type: Object, default: () => ({}) },
 })
 
@@ -38,8 +31,8 @@ const days = computed(() =>
 <template>
   <ul class="date-strip">
     <li v-for="day in days" :key="day.key" class="strip-item">
-      <!-- button 이라야 키보드 Tab 과 Enter 가 그냥 동작한다 -->
-      <!-- 두 span 이 붙어 '오늘8/5' 로 읽히므로 라벨을 따로 준다 -->
+      <!-- button 이라야 Tab·Enter 가 그냥 동작한다.
+           두 span 이 붙어 '오늘8/5' 로 읽히므로 aria-label 을 따로 준다. -->
       <button
         type="button"
         class="strip-btn"

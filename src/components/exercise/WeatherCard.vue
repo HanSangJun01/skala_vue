@@ -18,10 +18,8 @@ const configStore = useConfigStore()
 // 기온 단계. 원본 섭씨를 넘겨야 한다 (화씨를 넣으면 판정이 틀어진다)
 const tempTier = computed(() => getTempTier(props.cityItem.temp))
 
-// 눈금 위 위치. 단위를 바꿔도 자리는 그대로여야 하므로 섭씨 기준.
-// 카드마다 채움 비율을 따로 그리던 예전 방식은 서울 96% / 남극 10% 가
-// 서로 아무 관계가 없어서, 옆 카드와 비교가 되지 않았다.
-// 이제 −20~40℃ 자 하나를 모든 카드가 공유하므로 점 위치가 곧 기온이다.
+// 눈금 위 위치. 모든 카드가 같은 자를 쓰므로 점 위치가 곧 기온이다.
+// 단위를 바꿔도 자리는 그대로여야 하므로 섭씨 기준.
 const tempPercent = computed(() => getTempPercent(props.cityItem.temp))
 
 // 최저~최고가 눈금에서 차지하는 구간
@@ -31,7 +29,7 @@ const rangePercent = computed(() => {
   return { left: min, width: Math.max(0, max - min) }
 })
 
-// 0℃ 가 눈금의 어디인지 — 영하와 영상을 가르는 기준선
+// 영하와 영상을 가르는 기준선 위치
 const zeroPercent = getTempPercent(0)
 
 // 섭씨 숫자를 현재 단위로 바꾼다. 원본 데이터는 항상 섭씨다.
@@ -40,8 +38,7 @@ const toDisplayUnit = (celsius) =>
 
 const displayTemp = computed(() => toDisplayUnit(props.cityItem.temp))
 
-// 그날의 최저·최고. 예보를 볼 때 대표기온 다음으로 바로 찾는 값이라
-// 상세까지 들어가지 않아도 목록에서 보이게 한다.
+// 그날의 최저·최고
 const displayRange = computed(() => ({
   min: toDisplayUnit(props.cityItem.tempMin),
   max: toDisplayUnit(props.cityItem.tempMax),
@@ -72,9 +69,8 @@ const displayRange = computed(() => ({
       </div>
     </div>
 
-    <!-- 기온 눈금 — 모든 카드가 같은 −20~40℃ 자를 쓴다.
-         띠는 그날의 최저~최고, 점은 대표기온.
-         색은 CSS 에서 --t-solid 를 읽으므로 여기서 색을 적지 않는다. -->
+    <!-- 기온 눈금 — 띠는 그날의 최저~최고, 점은 대표기온.
+         색은 CSS 가 --t-solid 로 읽으므로 여기서 적지 않는다. -->
     <div
       class="temp-scale"
       :title="`${SCALE_MIN}℃ ~ ${SCALE_MAX}℃ 중 ${cityItem.temp}℃`"
@@ -96,8 +92,7 @@ const displayRange = computed(() => ({
       <!-- 습도 -->
       <p class="humidity-chip">습도 {{ cityItem.humidity }}%</p>
 
-      <!-- 대기질 — 기온과 다른 축이라 알약 형태로 떼어 놓는다.
-           예보 범위 밖(마지막 날)이면 aqi 가 null 이라 알아서 빠진다. -->
+      <!-- 예보 범위 밖(마지막 날)이면 aqi 가 null 이라 알아서 빠진다 -->
       <AirQualityChip :aqi="cityItem.aqi ?? null" />
 
       <!-- .stop 으로 위쪽 li 의 @click 까지 번지지 않게 한다 -->
@@ -193,8 +188,8 @@ const displayRange = computed(() => ({
 }
 
 /* ---- 기온 눈금 ----
-   position:relative 기준면 위에 자·기준선·구간·점을 겹쳐 놓는다.
-   왼쪽 끝이 −20℃, 오른쪽 끝이 40℃ 로 카드마다 항상 같다. */
+   기준면 위에 자·기준선·구간·점을 겹쳐 놓는다.
+   양 끝 값은 utils/temperature.js 의 SCALE_MIN·SCALE_MAX 를 따른다. */
 .temp-scale {
   position: relative;
   height: 12px;

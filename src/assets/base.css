@@ -64,15 +64,8 @@ body {
     color 0.5s,
     background-color 0.5s;
   line-height: 1.6;
-  /* 실제 글꼴은 dashboard.css 의 --dash-font 가 정한다.
-     맨 앞에 있던 Inter 는 불러오는 코드가 없어 늘 건너뛰던 이름이라 지웠다. */
-  font-family:
-    -apple-system,
-    BlinkMacSystemFont,
-    'Segoe UI',
-    Roboto,
-    'Helvetica Neue',
-    sans-serif;
+  /* 실제 글꼴은 dashboard.css 의 --dash-font 가 정한다 */
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
   font-size: 15px;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;

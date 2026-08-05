@@ -16,72 +16,99 @@ const goHome = () => {
       <p class="about-lead">이 서비스는 Vue 3 학습용으로 만든 날씨 대시보드입니다.</p>
 
       <ul class="about-list">
-        <li><mark style="color: red">components/exercise/</mark> 폴더 내부의 독립 부품 연동</li>
+        <!-- 강조는 인라인 style 대신 클래스로 뺀다. 나중에 색을 바꿀 때 한 곳만 고치면 된다. -->
+        <li><span class="about-mark">components/exercise/</span> 폴더 내부의 독립 부품 연동</li>
         <li>클라이언트 사이드 라우팅을 통한 새로고침 없는 화면 전환</li>
         <li>URL 쿼리 스트링 매핑을 활용한 실시간 검색 상태 동기화</li>
       </ul>
     </div>
 
-    <button class="home-btn" @click="goHome">메인 대시보드로 돌아가기</button>
+    <button class="home-btn" @click="goHome">← 메인 대시보드로 돌아가기</button>
   </div>
 </template>
 
 <style scoped>
 .about-view {
-  max-width: 560px;
+  max-width: var(--dash-width);
   margin: 0 auto;
-  padding: 20px 14px 32px;
-  font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
-  color: #2d3436;
+  padding: 18px 0 32px;
+  color: var(--dash-ink);
 }
 
 .about-title {
-  font-size: 22px;
-  font-weight: bold;
-  margin: 0 0 18px;
-}
-
-.about-lead {
   margin: 0 0 14px;
-  font-size: 14px;
-  line-height: 1.7;
+  font-size: 23px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
 }
 
 .about-box {
-  margin-bottom: 20px;
-  padding: 16px;
-  font-size: 14px;
+  margin-bottom: 18px;
+  padding: 22px;
+  /* 다른 화면의 카드와 같은 유리 질감으로 통일한다 */
+  background-color: var(--dash-surface);
+  border: 1px solid var(--dash-line);
+  border-radius: var(--dash-r-xl);
+  box-shadow: var(--dash-shadow-md);
+  animation: dash-rise var(--dash-ease-out) backwards;
+}
+
+.about-lead {
+  margin: 0 0 16px;
+  padding-bottom: 16px;
+  font-size: 15px;
   line-height: 1.7;
-  background-color: #f1f4f6;
-  border: 1px solid #dfe6e9;
-  border-radius: 10px;
+  border-bottom: 1px solid var(--dash-line-soft);
 }
 
 .about-list {
   margin: 0;
-  padding-left: 20px;
+  padding-left: 18px;
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--dash-ink-mid);
 }
 
-.about-list li {
-  margin-bottom: 8px;
+/* 목록 앞의 점 색만 강조색으로 바꾼다 */
+.about-list li::marker {
+  color: var(--dash-accent);
 }
 
-.about-list li:last-child {
-  margin-bottom: 0;
+.about-list li + li {
+  margin-top: 8px;
+}
+
+/* 폴더 경로 강조 — 코드처럼 보이게 한다 */
+.about-mark {
+  padding: 2px 6px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 13px;
+  color: var(--dash-accent-deep);
+  background-color: var(--dash-accent-soft);
+  border-radius: 5px;
 }
 
 .home-btn {
-  padding: 9px 14px;
+  padding: 11px 18px;
+  font-family: inherit;
   font-size: 13px;
-  font-weight: bold;
-  color: #ffffff;
-  background-color: #42b983;
-  border: none;
-  border-radius: 6px;
+  font-weight: 700;
+  color: var(--dash-ink-mid);
+  background-color: var(--dash-surface);
+  border: 1px solid var(--dash-line);
+  border-radius: var(--dash-r-pill);
   cursor: pointer;
+  transition:
+    color var(--dash-ease),
+    background-color var(--dash-ease),
+    border-color var(--dash-ease),
+    box-shadow var(--dash-ease);
 }
 
 .home-btn:hover {
-  background-color: #35a06f;
+  color: #ffffff;
+  background-color: var(--dash-accent);
+  border-color: var(--dash-accent);
+  box-shadow: none;
 }
 </style>

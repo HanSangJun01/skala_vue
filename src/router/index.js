@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 
+// 경로(path)와 이름(name)을 한곳에 모아 둔다.
 const router = createRouter({
   // 슬래시(/)를 사용해 URL 을 관리하는 방식
   history: createWebHistory(import.meta.env.BASE_URL),

@@ -8,6 +8,8 @@ defineProps({
 
 <template>
   <section class="panel">
+    <!-- 제목 왼쪽의 초록 막대는 순수 장식이라 CSS(::before)로 그린다.
+         장식용 요소를 template 에 넣으면 마크업이 지저분해진다. -->
     <h2 v-if="title !== ''" class="panel-title">{{ title }}</h2>
 
     <!-- 부모가 아무것도 주입하지 않으면 아래 내용이 대신 표시된다 (p154) -->
@@ -19,22 +21,38 @@ defineProps({
 
 <style scoped>
 .panel {
-  margin-bottom: 16px;
-  padding: 16px;
-  background-color: #f1f4f6;
-  border: 1px solid #dfe6e9;
-  border-radius: 10px;
+  margin-bottom: 14px;
+  padding: 20px;
+  /* 반투명 흰색 + 배경 흐리기 = 뒤의 빛무리가 은은하게 비쳐 보인다 */
+  background-color: var(--dash-surface);
+  border: 1px solid var(--dash-line);
+  border-radius: var(--dash-r-xl);
+  box-shadow: var(--dash-shadow-md);
 }
 
 .panel-title {
-  margin: 0 0 10px;
-  font-size: 15px;
-  font-weight: bold;
-  color: #2d3436;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin: 0 0 15px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  color: var(--dash-ink-mid);
+}
+
+/* 제목 앞의 작은 초록 막대 */
+.panel-title::before {
+  content: '';
+  width: 3px;
+  height: 14px;
+  border-radius: var(--dash-r-pill);
+  background-color: var(--dash-accent);
 }
 
 .panel-empty {
   margin: 0;
-  color: #636e72;
+  font-size: 14px;
+  color: var(--dash-ink-mid);
 }
 </style>

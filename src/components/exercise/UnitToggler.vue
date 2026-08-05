@@ -23,22 +23,30 @@ const configStore = useConfigStore()
 }
 
 .unit-label {
-  font-size: 13px;
-  color: #dfe6e9;
+  font-size: 12px;
+  /* 어두운 네비게이션 바 위에 올라가므로 흰색 계열을 반투명하게 쓴다 */
+  color: rgba(255, 255, 255, 0.72);
+  white-space: nowrap;
 }
 
 .unit-btn {
-  padding: 6px 10px;
-  font-size: 13px;
-  font-weight: bold;
-  color: #2d3436;
-  background-color: #dfe6e9;
-  border: none;
-  border-radius: 6px;
+  padding: 6px 12px;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  color: #ffffff;
+  background-color: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: var(--dash-r-pill);
   cursor: pointer;
+  white-space: nowrap;
+  transition:
+    background-color var(--dash-ease),
+    border-color var(--dash-ease);
 }
 
 .unit-btn:hover {
-  background-color: #ffffff;
+  background-color: rgba(255, 255, 255, 0.22);
+  border-color: rgba(255, 255, 255, 0.32);
 }
 </style>
